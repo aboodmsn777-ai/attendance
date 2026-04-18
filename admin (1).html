@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المدير — الحضور</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sage:#4a7c6f;--sage-light:#e8f2ef;--sage-dark:#2d5c51;
+  --sand:#f7f5f0;--white:#fff;--ink:#1c2b28;--muted:#7a9490;
+  --border:#e0e8e5;--red:#c94f4f;--red-bg:#fdf0f0;--amber:#b07d3a;--r:16px;
+}
+body{font-family:'Tajawal',sans-serif;background:var(--sand);min-height:100vh;color:var(--ink);}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(74,124,111,.05) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0;}
+.nav{position:sticky;top:0;z-index:100;background:rgba(247,245,240,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-dot{width:10px;height:10px;border-radius:50%;background:var(--sage);}
+.nav-title{font-size:16px;font-weight:700;}
+.live-badge{display:flex;align-items:center;gap:6px;background:var(--sage-light);border:1px solid rgba(74,124,111,.2);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--sage-dark);font-weight:600;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--sage);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.page{max-width:1100px;margin:0 auto;padding:24px 16px;position:relative;z-index:1;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;}
+.stat-val{font-size:30px;font-weight:700;line-height:1;margin-bottom:5px;}
+.stat-val.green{color:var(--sage);}.stat-val.amber{color:var(--amber);}
+.stat-label{font-size:12px;color:var(--muted);font-weight:500;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.section-title{font-size:15px;font-weight:700;}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.filter-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.filter-btn.active{border-color:var(--sage);color:var(--sage);background:var(--sage-light);}
+.filter-btn:hover{border-color:var(--sage);color:var(--sage);}
+.date-input{padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:12px;color:var(--ink);background:var(--white);outline:none;cursor:pointer;}
+.date-input:focus{border-color:var(--sage);}
+.search-wrap{position:relative;flex:1;min-width:160px;}
+.search-wrap input{width:100%;padding:8px 14px 8px 34px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--white);outline:none;transition:border .2s;}
+.search-wrap input:focus{border-color:var(--sage);}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none;}
+.table-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--sand);}
+th{padding:12px 16px;font-size:11px;font-weight:700;color:var(--muted);text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--sand);}
+.phone-cell{font-weight:700;font-size:14px;}
+.time-cell{color:var(--muted);font-size:12px;direction:ltr;text-align:right;}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.pill.ok{background:var(--sage-light);color:var(--sage-dark);}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);}
+.dev-cell{font-size:10px;color:var(--muted);direction:ltr;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state .e-ico{font-size:36px;margin-bottom:10px;opacity:.5;}
+.empty-state p{font-size:13px;}
+.btn-sm{padding:7px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.btn-sm:hover{border-color:var(--sage);color:var(--sage);}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+@media(max-width:640px){.panel-grid{grid-template-columns:1fr;}}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.panel-head{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between;}
+.panel-count{background:var(--sage-light);color:var(--sage-dark);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.panel-body{max-height:200px;overflow-y:auto;}
+.panel-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;}
+.panel-row:last-child{border-bottom:none;}
+.panel-row:hover{background:var(--sand);}
+.pr-phone{font-weight:600;}
+.pr-time{font-size:11px;color:var(--muted);}
+.loading{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-dot"></div>
+    <span class="nav-title">لوحة المدير</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="live-badge"><div class="live-dot"></div>مباشر</div>
+    <button class="btn-sm" id="btn-refresh">↻ تحديث</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-val green" id="s-today">—</div><div class="stat-label">حضور اليوم</div></div>
+    <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-label">إجمالي السجلات</div></div>
+    <div class="stat"><div class="stat-val amber" id="s-devices">—</div><div class="stat-label">أجهزة مسجّلة</div></div>
+    <div class="stat"><div class="stat-val green" id="s-week">—</div><div class="stat-label">هذا الأسبوع</div></div>
+  </div>
+
+  <!-- Panels -->
+  <div class="panel-grid">
+    <div class="panel">
+      <div class="panel-head">الأجهزة المسجّلة <span class="panel-count" id="users-count">0</span></div>
+      <div class="panel-body" id="users-list"><div class="loading">جاري التحميل...</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">آخر السجلات <span class="panel-count" id="recent-count">0</span></div>
+      <div class="panel-body" id="recent-list"><div class="loading">جاري التحميل...</div></div>
+    </div>
+  </div>
+
+  <!-- Table header -->
+  <div class="section-head">
+    <span class="section-title">سجلات الحضور</span>
+    <button class="btn-sm" id="btn-csv">⬇ تصدير CSV</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button class="filter-btn active" id="f-all">الكل</button>
+    <button class="filter-btn" id="f-today">اليوم</button>
+    <button class="filter-btn" id="f-week">هذا الأسبوع</button>
+    <input type="date" class="date-input" id="f-date" title="اختر تاريخ محدد">
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input type="text" id="search" placeholder="ابحث برقم الجوال...">
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>رقم الجوال</th>
+            <th>التاريخ</th>
+            <th>الوقت</th>
+            <th>الحالة</th>
+            <th>دقة GPS</th>
+          </tr>
+        </thead>
+        <tbody id="records-body"></tbody>
+      </table>
+    </div>
+    <div id="empty-msg" class="empty-state" style="display:none;">
+      <div class="e-ico">📭</div><p>لا توجد سجلات مطابقة</p>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
+  authDomain: "attendance-5df07.firebaseapp.com",
+  projectId: "attendance-5df07",
+  storageBucket: "attendance-5df07.firebasestorage.app",
+  messagingSenderId: "1028227731064",
+  appId: "1:1028227731064:web:81c2902d98b0e52437278d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+let allRecords = [];
+let allUsers   = [];
+let currentFilter = 'all';
+let selectedDate  = '';
+
+// ─── Load data from Firebase ───
+async function loadData(){
+  try{
+    const [recSnap, userSnap] = await Promise.all([
+      getDocs(query(collection(db,'attendance'), orderBy('time','desc'))),
+      getDocs(collection(db,'users'))
+    ]);
+    allRecords = recSnap.docs.map(d => d.data());
+    allUsers   = userSnap.docs.map(d => d.data());
+    updateStats();
+    renderPanels();
+    renderTable();
+  } catch(e){
+    console.error('Firebase error:', e);
+  }
+}
+
+// ─── Stats ───
+function updateStats(){
+  const now   = Date.now();
+  const today = new Date().toDateString();
+  const week  = now - 7*24*60*60*1000;
+  document.getElementById('s-today').textContent  = allRecords.filter(r => new Date(r.time).toDateString()===today).length;
+  document.getElementById('s-total').textContent  = allRecords.length;
+  document.getElementById('s-devices').textContent = allUsers.length;
+  document.getElementById('s-week').textContent   = allRecords.filter(r => new Date(r.time).getTime() > week).length;
+}
+
+// ─── Panels ───
+function renderPanels(){
+  // Devices
+  const uList = document.getElementById('users-list');
+  document.getElementById('users-count').textContent = allUsers.length;
+  uList.innerHTML = allUsers.length
+    ? allUsers.map(u=>`
+        <div class="panel-row">
+          <div class="pr-phone">${u.phone}</div>
+          <div class="pr-time">${new Date(u.registeredAt).toLocaleDateString('ar-SA')}</div>
+        </div>`).join('')
+    : '<div class="empty-state"><p>لا توجد أجهزة</p></div>';
+
+  // Recent 5
+  const rList = document.getElementById('recent-list');
+  const last5 = allRecords.slice(0,5);
+  document.getElementById('recent-count').textContent = last5.length;
+  rList.innerHTML = last5.length
+    ? last5.map(r=>`
+        <div class="panel-row">
+          <div class="pr-phone">${r.phone}</div>
+          <div class="pr-time">${new Date(r.time).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>`).join('')
+    : '<div class="empty-state"><p>لا توجد سجلات</p></div>';
+}
+
+// ─── Table ───
+function renderTable(){
+  const q   = document.getElementById('search').value.trim();
+  const now = Date.now();
+  let records = [...allRecords];
+
+  // Apply filter
+  if(currentFilter === 'today'){
+    const tod = new Date().toDateString();
+    records = records.filter(r => new Date(r.time).toDateString() === tod);
+  } else if(currentFilter === 'week'){
+    records = records.filter(r => new Date(r.time).getTime() > now - 7*24*60*60*1000);
+  } else if(currentFilter === 'date' && selectedDate){
+    records = records.filter(r => {
+      const d = new Date(r.time);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}` === selectedDate;
+    });
+  }
+
+  // Search
+  if(q) records = records.filter(r => r.phone.includes(q));
+
+  const tbody = document.getElementById('records-body');
+  const empty = document.getElementById('empty-msg');
+
+  if(!records.length){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = records.map((r,i) => {
+    const d       = new Date(r.time);
+    const dateStr = d.toLocaleDateString('ar-SA');
+    const timeStr = d.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+    const acc     = r.accuracy ? Math.round(r.accuracy)+'م' : '—';
+    return `<tr>
+      <td style="color:var(--muted);font-size:12px;">${i+1}</td>
+      <td class="phone-cell">${r.phone}</td>
+      <td class="time-cell">${dateStr}</td>
+      <td class="time-cell">${timeStr}</td>
+      <td><span class="pill ok"><span class="pill-dot"></span>مسجّل</span></td>
+      <td style="font-size:12px;">${acc}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Export CSV ───
+function exportCSV(){
+  if(!allRecords.length){ alert('لا توجد سجلات للتصدير'); return; }
+  const rows = [['رقم الجوال','التاريخ','الوقت','دقة GPS']];
+  allRecords.forEach(r => {
+    const d = new Date(r.time);
+    rows.push([
+      r.phone,
+      d.toLocaleDateString('ar-SA'),
+      d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}),
+      r.accuracy ? Math.round(r.accuracy)+'م' : '—'
+    ]);
+  });
+  const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'attendance_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// ─── Filter buttons ───
+function setFilter(f, btn){
+  currentFilter = f;
+  selectedDate  = '';
+  document.getElementById('f-date').value = '';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+// ─── Event Listeners ───
+document.getElementById('btn-refresh').addEventListener('click', loadData);
+document.getElementById('btn-csv').addEventListener('click', exportCSV);
+document.getElementById('f-all').addEventListener('click',   function(){ setFilter('all',   this); });
+document.getElementById('f-today').addEventListener('click', function(){ setFilter('today', this); });
+document.getElementById('f-week').addEventListener('click',  function(){ setFilter('week',  this); });
+
+document.getElementById('f-date').addEventListener('change', function(){
+  selectedDate  = this.value;
+  currentFilter = 'date';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  renderTable();
+});
+
+document.getElementById('search').addEventListener('input', renderTable);
+
+// ─── Auto refresh every 15s ───
+setInterval(loadData, 15000);
+
+// ─── Init ───
+loadData();
+</script>
+</body>
+</html>
