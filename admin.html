@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المدير</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sage:#4a7c6f;--sage-light:#e8f2ef;--sage-dark:#2d5c51;
+  --sand:#f7f5f0;--white:#fff;--ink:#1c2b28;--muted:#7a9490;
+  --border:#e0e8e5;--red:#c94f4f;--red-bg:#fdf0f0;
+  --amber:#b07d3a;--amber-light:#fdf6ec;--r:16px;
+}
+body{font-family:'Tajawal',sans-serif;background:var(--sand);min-height:100vh;color:var(--ink);}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(74,124,111,.05) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0;}
+
+/* Nav */
+.nav{position:sticky;top:0;z-index:100;background:rgba(247,245,240,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-dot{width:10px;height:10px;border-radius:50%;background:var(--sage);}
+.nav-title{font-size:16px;font-weight:700;}
+.live-badge{display:flex;align-items:center;gap:6px;background:var(--sage-light);border:1px solid rgba(74,124,111,.2);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--sage-dark);font-weight:600;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--sage);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;padding:0 20px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab-btn{padding:14px 16px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{color:var(--sage);border-bottom-color:var(--sage);}
+.tab-btn .badge{display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:white;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-right:4px;}
+
+.page{max-width:1100px;margin:0 auto;padding:20px 16px;position:relative;z-index:1;}
+.tab-content{display:none;}.tab-content.active{display:block;}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;}
+.stat-val{font-size:28px;font-weight:700;line-height:1;margin-bottom:5px;}
+.stat-val.green{color:var(--sage);}.stat-val.amber{color:var(--amber);}.stat-val.red{color:var(--red);}
+.stat-label{font-size:12px;color:var(--muted);font-weight:500;}
+
+/* Section */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.section-title{font-size:15px;font-weight:700;}
+
+/* Filters */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.filter-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.filter-btn.active,.filter-btn:hover{border-color:var(--sage);color:var(--sage);background:var(--sage-light);}
+.date-input{padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:12px;color:var(--ink);background:var(--white);outline:none;}
+.date-input:focus{border-color:var(--sage);}
+.search-wrap{position:relative;flex:1;min-width:160px;}
+.search-wrap input{width:100%;padding:8px 14px 8px 34px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--white);outline:none;}
+.search-wrap input:focus{border-color:var(--sage);}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none;}
+
+/* Table */
+.table-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:20px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--sand);}
+th{padding:12px 14px;font-size:11px;font-weight:700;color:var(--muted);text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--sand);}
+.name-cell{font-weight:700;}
+.phone-cell{color:var(--muted);font-size:12px;}
+.time-cell{color:var(--muted);font-size:12px;}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.pill.ok{background:var(--sage-light);color:var(--sage-dark);}
+.pill.pending{background:var(--amber-light);color:var(--amber);}
+.pill.paid{background:#e8f5e9;color:#2e7d32;}
+.pill.rejected{background:var(--red-bg);color:var(--red);}
+.pill-dot{width:6px;height:6px;border-radius:50%;}
+.pill.ok .pill-dot{background:var(--sage);}
+.pill.pending .pill-dot{background:var(--amber);}
+.pill.paid .pill-dot{background:#2e7d32;}
+.pill.rejected .pill-dot{background:var(--red);}
+
+/* Buttons */
+.btn-sm{padding:7px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+.btn-sm:hover{border-color:var(--sage);color:var(--sage);}
+.btn-danger{padding:7px 14px;border-radius:10px;border:1.5px solid rgba(201,79,79,.3);background:var(--red-bg);font-family:inherit;font-size:12px;font-weight:600;color:var(--red);cursor:pointer;transition:all .2s;}
+.btn-danger:hover{background:#fbd9d9;}
+.btn-primary{padding:10px 20px;border-radius:10px;border:none;background:var(--sage);font-family:inherit;font-size:13px;font-weight:700;color:white;cursor:pointer;transition:all .2s;}
+.btn-primary:hover{background:var(--sage-dark);}
+.btn-icon{padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;font-size:13px;cursor:pointer;transition:all .2s;}
+.btn-icon:hover{background:var(--sand);}
+.btn-confirm{padding:5px 12px;border-radius:8px;border:none;background:var(--sage-light);color:var(--sage-dark);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-reject{padding:5px 12px;border-radius:8px;border:none;background:var(--red-bg);color:var(--red);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-right:4px;}
+
+/* Add employee form */
+.add-form{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px;}
+.add-form h3{font-size:14px;font-weight:700;margin-bottom:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr 120px auto;gap:10px;align-items:end;}
+@media(max-width:640px){.form-row{grid-template-columns:1fr 1fr;}.form-row .btn-primary{grid-column:1/-1;}}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.form-group input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--sand);outline:none;}
+.form-group input:focus{border-color:var(--sage);background:var(--white);}
+
+/* Receipt text box */
+.receipt-box{background:var(--sand);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--ink);max-height:100px;overflow-y:auto;direction:ltr;text-align:right;word-break:break-all;}
+
+/* Empty */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-state .e-ico{font-size:32px;margin-bottom:8px;opacity:.5;}
+.empty-state p{font-size:13px;}
+.loading{text-align:center;padding:30px;color:var(--muted);font-size:13px;}
+
+/* Alert */
+.alert-bar{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px;display:none;}
+.alert-bar.show{display:block;}
+.alert-bar.success{background:var(--sage-light);color:var(--sage-dark);}
+.alert-bar.error{background:var(--red-bg);color:var(--red);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-dot"></div>
+    <span class="nav-title">لوحة المدير</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="live-badge"><div class="live-dot"></div>مباشر</div>
+    <button class="btn-sm" id="btn-refresh">↻ تحديث</button>
+  </div>
+</nav>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tab-attendance-btn" onclick="switchTab('attendance')">سجلات الحضور</button>
+  <button class="tab-btn" id="tab-employees-btn" onclick="switchTab('employees')">اللاعبون</button>
+  <button class="tab-btn" id="tab-payments-btn" onclick="switchTab('payments')">المدفوعات <span class="badge" id="pending-badge" style="display:none;">0</span></button>
+</div>
+
+<div class="page">
+
+  <!-- ══ TAB 1: الحضور ══ -->
+  <div class="tab-content active" id="tab-attendance">
+    <div class="stats">
+      <div class="stat"><div class="stat-val green" id="s-today">—</div><div class="stat-label">حضور اليوم</div></div>
+      <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-label">إجمالي السجلات</div></div>
+      <div class="stat"><div class="stat-val amber" id="s-emp">—</div><div class="stat-label">عدد اللاعبين</div></div>
+      <div class="stat"><div class="stat-val green" id="s-week">—</div><div class="stat-label">هذا الأسبوع</div></div>
+    </div>
+
+    <div class="section-head">
+      <span class="section-title">سجلات الحضور</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-sm" id="btn-csv">⬇ تصدير CSV</button>
+        <button class="btn-danger" id="btn-delete-old">🗑 حذف سجلات +24 ساعة</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" id="f-all">الكل</button>
+      <button class="filter-btn" id="f-today">اليوم</button>
+      <button class="filter-btn" id="f-week">هذا الأسبوع</button>
+      <input type="date" class="date-input" id="f-date">
+      <div class="search-wrap">
+        <span class="search-ico">🔍</span>
+        <input type="text" id="search-att" placeholder="ابحث باسم أو رقم...">
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>الاسم</th><th>رقم الجوال</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th>دقة GPS</th></tr></thead>
+          <tbody id="records-body"></tbody>
+        </table>
+      </div>
+      <div id="empty-att" class="empty-state" style="display:none;"><div class="e-ico">📭</div><p>لا توجد سجلات</p></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: اللاعبون ══ -->
+  <div class="tab-content" id="tab-employees">
+    <div class="add-form">
+      <h3>إضافة لاعب جديد</h3>
+      <div id="form-alert" class="alert-bar"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>الاسم</label>
+          <input type="text" id="emp-name" placeholder="اسم اللاعب">
+        </div>
+        <div class="form-group">
+          <label>رقم الجوال</label>
+          <input type="tel" id="emp-phone" placeholder="05XXXXXXXX" maxlength="10" style="direction:ltr;text-align:right;">
+        </div>
+        <div class="form-group">
+          <label>المبلغ المطلوب (ريال)</label>
+          <input type="number" id="emp-amount" placeholder="0" min="0">
+        </div>
+        <button class="btn-primary" id="btn-add-emp">إضافة</button>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <span class="section-title">قائمة اللاعبين</span>
+      <span id="emp-count" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>الاسم</th><th>رقم الجوال</th><th>المبلغ المطلوب</th><th>آخر حضور</th><th>حذف</th></tr></thead>
+          <tbody id="employees-body"></tbody>
+        </table>
+      </div>
+      <div id="empty-emp" class="empty-state" style="display:none;"><div class="e-ico">👥</div><p>لا يوجد لاعبون — أضف موظفاً أعلاه</p></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 3: المدفوعات ══ -->
+  <div class="tab-content" id="tab-payments">
+    <div class="section-head">
+      <span class="section-title">إيصالات الدفع</span>
+      <span style="font-size:12px;color:var(--muted);">مرسلة من الموظفين</span>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>الاسم</th><th>رقم الجوال</th><th>وقت الإرسال</th><th>نص الإيصال</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody id="payments-body"></tbody>
+        </table>
+      </div>
+      <div id="empty-pay" class="empty-state" style="display:none;"><div class="e-ico">💳</div><p>لا توجد إيصالات بعد</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('tab-'+name+'-btn').classList.add('active');
+}
+</script>
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, getDoc, addDoc, setDoc, deleteDoc, doc, orderBy, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
+  authDomain: "attendance-5df07.firebaseapp.com",
+  projectId: "attendance-5df07",
+  storageBucket: "attendance-5df07.firebasestorage.app",
+  messagingSenderId: "1028227731064",
+  appId: "1:1028227731064:web:81c2902d98b0e52437278d"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let allRecords=[], allEmployees={}, allPayments=[];
+let currentFilter='all', selectedDate='';
+
+// ─── Load all ───
+async function loadData(){
+  try{
+    const [recSnap, empSnap, paySnap] = await Promise.all([
+      getDocs(query(collection(db,'attendance'), orderBy('time','desc'))),
+      getDocs(collection(db,'employees')),
+      getDocs(query(collection(db,'payments'), orderBy('time','desc')))
+    ]);
+    allRecords  = recSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allEmployees= {};
+    empSnap.docs.forEach(d=>{ allEmployees[d.data().phone]={...d.data()}; });
+    allPayments = paySnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    updateStats();
+    renderAttendance();
+    renderEmployees();
+    renderPayments();
+    updatePendingBadge();
+  } catch(e){ console.error(e); }
+}
+
+function updateStats(){
+  const now=Date.now(), today=new Date().toDateString(), week=now-7*24*60*60*1000;
+  document.getElementById('s-today').textContent = allRecords.filter(r=>new Date(r.time).toDateString()===today).length;
+  document.getElementById('s-total').textContent = allRecords.length;
+  document.getElementById('s-emp').textContent   = Object.keys(allEmployees).length;
+  document.getElementById('s-week').textContent  = allRecords.filter(r=>new Date(r.time).getTime()>week).length;
+}
+
+function updatePendingBadge(){
+  const pending=allPayments.filter(p=>p.status==='pending').length;
+  const badge=document.getElementById('pending-badge');
+  if(pending>0){ badge.textContent=pending; badge.style.display='inline-flex'; }
+  else badge.style.display='none';
+}
+
+// ─── Attendance ───
+function renderAttendance(){
+  const q=document.getElementById('search-att').value.trim();
+  const now=Date.now();
+  let records=[...allRecords];
+  if(currentFilter==='today') records=records.filter(r=>new Date(r.time).toDateString()===new Date().toDateString());
+  else if(currentFilter==='week') records=records.filter(r=>new Date(r.time).getTime()>now-7*24*60*60*1000);
+  else if(currentFilter==='date'&&selectedDate) records=records.filter(r=>{
+    const d=new Date(r.time);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`===selectedDate;
+  });
+  if(q) records=records.filter(r=>(allEmployees[r.phone]?.name||'').includes(q)||r.phone.includes(q));
+
+  const tbody=document.getElementById('records-body');
+  const empty=document.getElementById('empty-att');
+  if(!records.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=records.map((r,i)=>{
+    const d=new Date(r.time);
+    const name=allEmployees[r.phone]?.name||'—';
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px;">${i+1}</td>
+      <td class="name-cell">${name}</td>
+      <td class="phone-cell">${r.phone}</td>
+      <td class="time-cell">${d.toLocaleDateString('ar-SA')}</td>
+      <td class="time-cell">${d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="pill ok"><span class="pill-dot"></span>حضر</span></td>
+      <td style="font-size:12px;">${r.accuracy?Math.round(r.accuracy)+'م':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Employees ───
+function renderEmployees(){
+  const entries=Object.entries(allEmployees);
+  document.getElementById('emp-count').textContent=entries.length+' موظف';
+  const tbody=document.getElementById('employees-body');
+  const empty=document.getElementById('empty-emp');
+  if(!entries.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=entries.map(([phone,emp],i)=>{
+    const lastRec=allRecords.find(r=>r.phone===phone);
+    const lastTime=lastRec?`${new Date(lastRec.time).toLocaleDateString('ar-SA')} ${new Date(lastRec.time).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}`:'لم يحضر';
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px;">${i+1}</td>
+      <td class="name-cell">${emp.name}</td>
+      <td class="phone-cell">${phone}</td>
+      <td style="font-weight:700;color:var(--amber);">${emp.amount?emp.amount+' ريال':'—'}</td>
+      <td class="time-cell">${lastTime}</td>
+      <td><button class="btn-icon" onclick="deleteEmployee('${phone}','${emp.name}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Payments ───
+function renderPayments(){
+  const tbody=document.getElementById('payments-body');
+  const empty=document.getElementById('empty-pay');
+  if(!allPayments.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=allPayments.map((p,i)=>{
+    const d=new Date(p.time);
+    const name=allEmployees[p.phone]?.name||'—';
+    const statusPill=p.status==='confirmed'
+      ?'<span class="pill paid"><span class="pill-dot"></span>مؤكد</span>'
+      :p.status==='rejected'
+      ?'<span class="pill rejected"><span class="pill-dot"></span>مرفوض</span>'
+      :'<span class="pill pending"><span class="pill-dot"></span>قيد المراجعة</span>';
+    const actions=p.status==='pending'
+      ?`<button class="btn-confirm" onclick="updatePayment('${p.id}','confirmed')">✅ تأكيد</button>
+         <button class="btn-reject"  onclick="updatePayment('${p.id}','rejected')">❌ رفض</button>`
+      :'—';
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px;">${i+1}</td>
+      <td class="name-cell">${name}</td>
+      <td class="phone-cell">${p.phone}</td>
+      <td class="time-cell">${d.toLocaleDateString('ar-SA')} ${d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><div class="receipt-box">${p.receiptText||'—'}</div></td>
+      <td>${statusPill}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Actions ───
+window.deleteEmployee=async function(phone,name){
+  if(!confirm(`حذف اللاعب ${name}؟`)) return;
+  await deleteDoc(doc(db,'employees',phone));
+  delete allEmployees[phone];
+  renderEmployees(); updateStats();
+}
+
+window.updatePayment=async function(id,status){
+  await updateDoc(doc(db,'payments',id),{status});
+  await loadData();
+}
+
+function exportCSV(){
+  if(!allRecords.length){ alert('لا توجد سجلات'); return; }
+  const rows=[['الاسم','رقم الجوال','التاريخ','الوقت','دقة GPS']];
+  allRecords.forEach(r=>{
+    const d=new Date(r.time);
+    rows.push([allEmployees[r.phone]?.name||'—',r.phone,d.toLocaleDateString('ar-SA'),d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}),r.accuracy?Math.round(r.accuracy)+'م':'—']);
+  });
+  const csv='\uFEFF'+rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='attendance_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+async function deleteOldRecords(){
+  const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
+  const old=allRecords.filter(r=>r.time<cutoff);
+  if(!old.length){ alert('لا توجد سجلات أقدم من 24 ساعة'); return; }
+  if(!confirm(`حذف ${old.length} سجل أقدم من 24 ساعة؟`)) return;
+  await Promise.all(old.map(r=>deleteDoc(doc(db,'attendance',r.id))));
+  await loadData();
+}
+
+// ─── Tabs ───
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('tab-'+name+'-btn').classList.add('active');
+}
+
+function setFilter(f,btn){
+  currentFilter=f; selectedDate='';
+  document.getElementById('f-date').value='';
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderAttendance();
+}
+
+// ─── Event Listeners ───
+document.getElementById('btn-refresh').addEventListener('click',loadData);
+document.getElementById('btn-csv').addEventListener('click',exportCSV);
+document.getElementById('btn-delete-old').addEventListener('click',deleteOldRecords);
+document.getElementById('f-all').addEventListener('click',   function(){ setFilter('all',this); });
+document.getElementById('f-today').addEventListener('click', function(){ setFilter('today',this); });
+document.getElementById('f-week').addEventListener('click',  function(){ setFilter('week',this); });
+document.getElementById('f-date').addEventListener('change', function(){ selectedDate=this.value; currentFilter='date'; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); renderAttendance(); });
+document.getElementById('search-att').addEventListener('input',renderAttendance);
+
+document.getElementById('btn-add-emp').addEventListener('click',async()=>{
+  const name=document.getElementById('emp-name').value.trim();
+  const phone=document.getElementById('emp-phone').value.trim();
+  const amount=parseFloat(document.getElementById('emp-amount').value)||0;
+  const alertEl=document.getElementById('form-alert');
+  if(!name||phone.length<10){
+    alertEl.textContent='أدخل الاسم ورقم الجوال بشكل صحيح';
+    alertEl.className='alert-bar error show'; return;
+  }
+  await setDoc(doc(db,'employees',phone),{name,phone,amount,addedAt:new Date().toISOString()});
+  allEmployees[phone]={name,phone,amount};
+  document.getElementById('emp-name').value='';
+  document.getElementById('emp-phone').value='';
+  document.getElementById('emp-amount').value='';
+  alertEl.textContent='تمت إضافة '+name+' بنجاح ✅';
+  alertEl.className='alert-bar success show';
+  setTimeout(()=>alertEl.classList.remove('show'),3000);
+  renderEmployees(); updateStats();
+});
+
+setInterval(loadData,15000);
+loadData();
+</script>
+</body>
+</html>
