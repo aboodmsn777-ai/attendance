@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الحضور</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --green:#00c853;--green2:#00e676;--green-dark:#007b3a;
+  --white:#ffffff;--ink:#0a1a0d;--muted:rgba(255,255,255,.6);
+  --card:rgba(0,0,0,.55);--border:rgba(255,255,255,.15);
+  --r:16px;
+}
+
+body{
+  font-family:'Tajawal',sans-serif;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:20px;
+  color:var(--white);
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ─── Stadium SVG background ─── */
+.stadium-bg{
+  position:fixed;inset:0;z-index:0;
+  background:#0a2e0f;
+  overflow:hidden;
+}
+
+/* Grass pattern */
+.stadium-bg::before{
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    90deg,
+    rgba(0,180,60,.12) 0px,
+    rgba(0,180,60,.12) 40px,
+    transparent 40px,
+    transparent 80px
+  );
+}
+
+/* Stadium lights glow */
+.stadium-bg::after{
+  content:'';
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% -10%, rgba(255,255,180,.15) 0%, transparent 70%),
+    radial-gradient(ellipse 30% 50% at 0% 50%, rgba(0,200,80,.1) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 50% at 100% 50%, rgba(0,200,80,.1) 0%, transparent 60%);
+}
+
+.field-svg{
+  position:absolute;
+  bottom:0;left:50%;
+  transform:translateX(-50%);
+  width:120%;max-width:900px;
+  opacity:.35;
+}
+
+/* Crowd dots effect */
+.crowd{
+  position:absolute;top:0;left:0;right:0;height:35%;
+  background-image:
+    radial-gradient(circle 1px at 10% 20%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(circle 1px at 20% 35%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(circle 1px at 30% 15%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(circle 1px at 40% 28%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(circle 1px at 50% 10%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(circle 1px at 60% 22%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(circle 1px at 70% 18%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(circle 1px at 80% 30%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(circle 1px at 90% 12%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(circle 1px at 15% 8%,  rgba(255,200,0,.4)  0%, transparent 100%),
+    radial-gradient(circle 1px at 45% 18%, rgba(255,50,50,.4)  0%, transparent 100%),
+    radial-gradient(circle 1px at 75% 8%,  rgba(0,150,255,.4)  0%, transparent 100%);
+  background-size:
+    180px 60px, 180px 60px, 180px 60px, 180px 60px,
+    180px 60px, 180px 60px, 180px 60px, 180px 60px,
+    180px 60px, 180px 60px, 180px 60px, 180px 60px;
+}
+
+/* Floodlights */
+.lights{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:100%;
+  pointer-events:none;
+}
+.light{
+  position:absolute;
+  top:8%;
+  width:4px;height:40%;
+  background:linear-gradient(to bottom, rgba(255,255,200,.8), transparent);
+  filter:blur(2px);
+}
+.light::after{
+  content:'';
+  position:absolute;
+  top:-6px;left:50%;transform:translateX(-50%);
+  width:12px;height:12px;border-radius:50%;
+  background:#fffde0;
+  box-shadow:0 0 20px 8px rgba(255,253,200,.6);
+}
+.light-1{left:5%;}
+.light-2{left:18%;}
+.light-3{right:18%;}
+.light-4{right:5%;}
+
+/* Spotlight beams */
+.beam{
+  position:absolute;
+  top:10%;
+  width:80px;
+  height:60%;
+  opacity:.06;
+  pointer-events:none;
+}
+.beam-1{left:5%;background:linear-gradient(160deg,#fff 0%,transparent 70%);transform-origin:top left;}
+.beam-2{left:18%;background:linear-gradient(150deg,#fff 0%,transparent 65%);transform-origin:top left;}
+.beam-3{right:18%;background:linear-gradient(210deg,#fff 0%,transparent 65%);transform-origin:top right;}
+.beam-4{right:5%;background:linear-gradient(200deg,#fff 0%,transparent 70%);transform-origin:top right;}
+
+/* ─── Score board top ─── */
+.scoreboard{
+  position:relative;z-index:2;
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:24px;
+  animation:fadeDown .6s ease both;
+}
+.score-badge{
+  background:rgba(0,0,0,.7);
+  border:1px solid rgba(0,200,80,.3);
+  border-radius:30px;
+  padding:6px 18px;
+  font-size:11px;font-weight:700;
+  color:var(--green2);
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;
+}
+.live-pip{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--green2);
+  animation:blink 1s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ─── Main card ─── */
+.card{
+  position:relative;z-index:2;
+  width:100%;max-width:400px;
+  background:var(--card);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-radius:24px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  box-shadow:
+    0 32px 64px rgba(0,0,0,.5),
+    0 0 0 1px rgba(255,255,255,.05),
+    inset 0 1px 0 rgba(255,255,255,.1);
+  animation:fadeUp .5s ease both .1s;
+}
+
+/* Green top accent */
+.card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg, transparent, var(--green2), var(--green), var(--green2), transparent);
+}
+
+/* ─── Card header ─── */
+.card-head{
+  padding:28px 24px 20px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+
+/* Ball icon */
+.ball{
+  width:64px;height:64px;
+  margin:0 auto 14px;
+  position:relative;
+}
+.ball svg{
+  width:100%;height:100%;
+  filter:drop-shadow(0 0 12px rgba(0,230,118,.5));
+  animation:rotate 8s linear infinite;
+}
+@keyframes rotate{to{transform:rotate(360deg)}}
+
+.card-head h1{
+  font-size:22px;font-weight:900;
+  letter-spacing:-0.5px;
+  margin-bottom:5px;
+  text-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+.card-head p{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:300;
+  line-height:1.6;
+}
+
+/* ─── Status strip ─── */
+.card-body{padding:20px 24px;}
+
+.status-strip{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:20px;
+}
+.strip-item{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  padding:12px 14px;
+}
+.strip-label{
+  font-size:10px;color:var(--muted);
+  font-weight:600;letter-spacing:.5px;
+  text-transform:uppercase;margin-bottom:5px;
+}
+.strip-val{
+  font-size:12px;font-weight:700;
+  display:flex;align-items:center;gap:6px;
+}
+.pip{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+  flex-shrink:0;transition:background .4s;
+}
+.pip.ok{background:var(--green2);box-shadow:0 0 6px var(--green2);}
+.pip.bad{background:#ff5252;box-shadow:0 0 6px #ff5252;}
+.pip.loading{background:#ffd740;animation:blink .8s infinite;}
+
+/* ─── Input ─── */
+.field{margin-bottom:14px;}
+.field label{
+  display:block;font-size:11px;font-weight:700;
+  color:var(--muted);margin-bottom:7px;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.input-wrap{position:relative;}
+.input-wrap input{
+  width:100%;
+  padding:14px 16px 14px 48px;
+  background:rgba(255,255,255,.08);
+  border:1.5px solid rgba(255,255,255,.15);
+  border-radius:12px;
+  font-family:inherit;font-size:15px;font-weight:600;
+  color:var(--white);
+  outline:none;
+  transition:all .2s;
+  direction:ltr;text-align:right;
+}
+.input-wrap input::placeholder{color:rgba(255,255,255,.3);}
+.input-wrap input:focus{
+  border-color:var(--green2);
+  background:rgba(0,230,118,.08);
+  box-shadow:0 0 0 4px rgba(0,230,118,.1);
+}
+.input-wrap .ico{
+  position:absolute;left:14px;top:50%;
+  transform:translateY(-50%);
+  font-size:18px;opacity:.6;
+  pointer-events:none;
+}
+
+/* ─── Buttons ─── */
+.btn-main{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg, var(--green-dark), var(--green), var(--green2));
+  border:none;border-radius:12px;
+  font-family:inherit;font-size:15px;font-weight:800;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:.3px;
+  box-shadow:0 6px 20px rgba(0,200,80,.35);
+  margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+.btn-main::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,200,80,.45);}
+.btn-main:hover::before{opacity:1;}
+.btn-main:active{transform:none;}
+.btn-main:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+.btn-refresh{
+  width:100%;padding:11px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;
+  font-family:inherit;font-size:13px;font-weight:600;
+  color:rgba(255,255,255,.7);
+  cursor:pointer;transition:all .2s;
+}
+.btn-refresh:hover{background:rgba(255,255,255,.1);color:var(--white);}
+
+/* ─── Alert ─── */
+.alert{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:13px 15px;border-radius:12px;
+  font-size:13px;font-weight:600;line-height:1.5;
+  margin-top:12px;animation:fadeIn .3s ease;
+}
+.alert.success{background:rgba(0,200,80,.15);color:#69f0ae;border:1px solid rgba(0,200,80,.2);}
+.alert.error{background:rgba(255,82,82,.15);color:#ff8a80;border:1px solid rgba(255,82,82,.2);}
+.alert.warn{background:rgba(255,215,64,.12);color:#ffd740;border:1px solid rgba(255,215,64,.2);}
+.alert-ico{font-size:16px;flex-shrink:0;margin-top:1px;}
+
+/* ─── Footer ─── */
+.card-foot{
+  padding:14px 24px;
+  border-top:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+  text-align:center;
+}
+.card-foot p{font-size:11px;color:rgba(255,255,255,.4);line-height:1.7;}
+.device-id{font-size:9px;color:rgba(255,255,255,.15);margin-top:3px;direction:ltr;word-break:break-all;}
+
+/* ─── Spinner ─── */
+.spin{
+  width:18px;height:18px;
+  border:2px solid rgba(0,0,0,.2);
+  border-top-color:var(--ink);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── Animations ─── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- Stadium Background -->
+<div class="stadium-bg">
+  <div class="crowd"></div>
+  <div class="lights">
+    <div class="light light-1"></div>
+    <div class="light light-2"></div>
+    <div class="light light-3"></div>
+    <div class="light light-4"></div>
+  </div>
+  <div class="beam beam-1"></div>
+  <div class="beam beam-2"></div>
+  <div class="beam beam-3"></div>
+  <div class="beam beam-4"></div>
+
+  <!-- Football field SVG -->
+  <svg class="field-svg" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+    <!-- Field -->
+    <rect x="0" y="50" width="800" height="350" fill="#1a6b2a" rx="4"/>
+    <!-- Grass stripes -->
+    <rect x="0"   y="50" width="80" height="350" fill="#1e7a30" opacity=".5"/>
+    <rect x="160" y="50" width="80" height="350" fill="#1e7a30" opacity=".5"/>
+    <rect x="320" y="50" width="80" height="350" fill="#1e7a30" opacity=".5"/>
+    <rect x="480" y="50" width="80" height="350" fill="#1e7a30" opacity=".5"/>
+    <rect x="640" y="50" width="80" height="350" fill="#1e7a30" opacity=".5"/>
+    <!-- Outline -->
+    <rect x="40" y="70" width="720" height="310" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    <!-- Center line -->
+    <line x1="400" y1="70" x2="400" y2="380" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    <!-- Center circle -->
+    <circle cx="400" cy="225" r="60" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    <circle cx="400" cy="225" r="4" fill="rgba(255,255,255,.6)"/>
+    <!-- Left penalty box -->
+    <rect x="40" y="140" width="130" height="170" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+    <rect x="40" y="170" width="60" height="110" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <!-- Right penalty box -->
+    <rect x="630" y="140" width="130" height="170" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+    <rect x="700" y="170" width="60" height="110" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <!-- Goals -->
+    <rect x="20" y="190" width="20" height="70" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"/>
+    <rect x="760" y="190" width="20" height="70" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"/>
+  </svg>
+</div>
+
+<!-- Content -->
+<div class="scoreboard">
+  <div class="score-badge">
+    <div class="live-pip"></div>
+    تسجيل الحضور
+  </div>
+</div>
+
+<div class="card">
+  <!-- Head -->
+  <div class="card-head">
+    <div class="ball">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="48" fill="white" stroke="#333" stroke-width="2"/>
+        <polygon points="50,10 62,35 90,35 68,54 76,80 50,63 24,80 32,54 10,35 38,35" fill="#222" opacity=".85"/>
+        <circle cx="50" cy="50" r="48" fill="none" stroke="#eee" stroke-width="1"/>
+      </svg>
+    </div>
+    <h1>تسجيل الحضور</h1>
+    <p>يتحقق من موقعك وجهازك تلقائياً</p>
+  </div>
+
+  <!-- Body -->
+  <div class="card-body">
+    <div class="status-strip">
+      <div class="strip-item">
+        <div class="strip-label">الموقع</div>
+        <div class="strip-val">
+          <div class="pip loading" id="gps-pip"></div>
+          <span id="gps-txt">جاري التحديد</span>
+        </div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-label">المنطقة</div>
+        <div class="strip-val">
+          <div class="pip" id="zone-pip"></div>
+          <span id="zone-txt">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>رقم جوالك</label>
+      <div class="input-wrap">
+        <span class="ico">📱</span>
+        <input type="tel" id="phone" placeholder="05XXXXXXXX" maxlength="10"
+          onkeydown="if(event.key==='Enter') doCheckIn()">
+      </div>
+    </div>
+
+    <button class="btn-main" id="checkin-btn" onclick="doCheckIn()">
+      تسجيل الحضور
+    </button>
+    <button class="btn-refresh" onclick="getLocation()">
+      تحديث الموقع
+    </button>
+
+    <div id="alert-box"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="card-foot">
+    <p>جهاز واحد — رقم واحد فقط<br>لا يمكن تسجيل أكثر من شخص من نفس الجهاز</p>
+    <div class="device-id" id="did-display"></div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
+  authDomain: "attendance-5df07.firebaseapp.com",
+  projectId: "attendance-5df07",
+  storageBucket: "attendance-5df07.firebasestorage.app",
+  messagingSenderId: "1028227731064",
+  appId: "1:1028227731064:web:81c2902d98b0e52437278d"
+};
+
+const ZONE_LAT      = 24.783556;
+const ZONE_LNG      = 46.724472;
+const ZONE_RADIUS_M = 100;
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+function getDeviceId(){
+  let id=localStorage.getItem('__did__');
+  if(!id){
+    id='D-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
+    localStorage.setItem('__did__',id);
+  }
+  return id;
+}
+const DEVICE_ID=getDeviceId();
+document.getElementById('did-display').textContent='ID: '+DEVICE_ID;
+
+function dist(la1,lo1,la2,lo2){
+  const R=6371000,d2r=Math.PI/180;
+  const dLa=(la2-la1)*d2r,dLo=(lo2-lo1)*d2r;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*d2r)*Math.cos(la2*d2r)*Math.sin(dLo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+let pos=null;
+
+function alert_(type,ico,msg){
+  document.getElementById('alert-box').innerHTML=
+    `<div class="alert ${type}"><span class="alert-ico">${ico}</span><span>${msg}</span></div>`;
+}
+
+window.getLocation=function(){
+  const pip=document.getElementById('gps-pip');
+  const txt=document.getElementById('gps-txt');
+  const zpip=document.getElementById('zone-pip');
+  const ztxt=document.getElementById('zone-txt');
+  const btn=document.querySelector('.btn-refresh');
+  pip.className='pip loading'; txt.textContent='جاري التحديد...';
+  zpip.className='pip'; ztxt.textContent='—';
+  if(btn) btn.disabled=true;
+  if(!navigator.geolocation){
+    pip.className='pip bad'; txt.textContent='غير مدعوم';
+    if(btn) btn.disabled=false; return;
+  }
+  function onSuccess(p){
+    pos=p.coords;
+    pip.className='pip ok';
+    txt.textContent=pos.latitude.toFixed(4)+', '+pos.longitude.toFixed(4);
+    const d=dist(pos.latitude,pos.longitude,ZONE_LAT,ZONE_LNG);
+    const inside=d<=ZONE_RADIUS_M;
+    zpip.className='pip '+(inside?'ok':'bad');
+    ztxt.textContent=inside?'داخل الملعب ✓':'خارج النطاق ✗';
+    if(btn) btn.disabled=false;
+  }
+  function onError(err){
+    pip.className='pip bad';
+    const msgs={1:'الإذن مرفوض',2:'تعذّر التحديد',3:'انتهت المهلة'};
+    txt.textContent=msgs[err.code]||'خطأ';
+    alert_('error','📍',msgs[err.code]||'تعذّر تحديد الموقع');
+    if(btn) btn.disabled=false;
+  }
+  navigator.geolocation.getCurrentPosition(onSuccess,
+    ()=>navigator.geolocation.getCurrentPosition(onSuccess,onError,{enableHighAccuracy:false,timeout:15000,maximumAge:30000}),
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+
+window.doCheckIn=async function(){
+  const phone=document.getElementById('phone').value.trim();
+  const btn=document.getElementById('checkin-btn');
+  if(phone.length<10){ alert_('error','⚠️','أدخل رقم جوال صحيح'); return; }
+  if(!pos){ alert_('warn','📍','اضغط تحديث الموقع أولاً'); return; }
+
+  btn.disabled=true;
+  btn.innerHTML='<div class="spin"></div>';
+
+  try{
+    const d=dist(pos.latitude,pos.longitude,ZONE_LAT,ZONE_LNG);
+    if(d>ZONE_RADIUS_M){
+      alert_('error','📍',`أنت خارج النطاق المحدد بـ ${Math.round(d)} متر`);
+      done(btn); return;
+    }
+
+    const devSnap=await getDocs(query(collection(db,'users'),where('deviceId','==',DEVICE_ID)));
+    if(!devSnap.empty){
+      const existingPhone=devSnap.docs[0].data().phone;
+      if(existingPhone!==phone){
+        alert_('error','🚫','هذا الجهاز مسجّل برقم آخر');
+        done(btn); return;
+      }
+    }
+
+    const userDoc=await getDoc(doc(db,'users',phone));
+    if(userDoc.exists() && userDoc.data().deviceId!==DEVICE_ID){
+      alert_('error','🚫','هذا الرقم مرتبط بجهاز آخر');
+      done(btn); return;
+    }
+
+    if(!userDoc.exists()){
+      await setDoc(doc(db,'users',phone),{phone,deviceId:DEVICE_ID,registeredAt:new Date().toISOString()});
+    }
+
+    await addDoc(collection(db,'attendance'),{
+      phone, deviceId:DEVICE_ID,
+      lat:pos.latitude, lng:pos.longitude, accuracy:pos.accuracy,
+      time:new Date().toISOString()
+    });
+    alert_('success','⚽',`تم تسجيل حضورك بنجاح — ${new Date().toLocaleTimeString('ar-SA')}`);
+
+  } catch(e){
+    alert_('error','❌','حدث خطأ، حاول مرة أخرى');
+    console.error(e);
+  }
+  done(btn);
+}
+
+function done(btn){ btn.disabled=false; btn.textContent='تسجيل الحضور'; }
+
+getLocation();
+</script>
+</body>
+</html>
