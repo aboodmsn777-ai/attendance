@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الحضور</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c9a84c;--gold2:#f0c060;--gold3:#ffd700;
+  --dark:#0a0a0a;--dark2:#111111;--dark3:#1a1a1a;
+  --card:rgba(20,20,20,.95);--border:rgba(201,168,76,.2);
+  --white:#fff;--muted:rgba(255,255,255,.45);
+}
+body{
+  font-family:'Tajawal',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:20px;color:var(--white);
+  background:var(--dark);overflow-x:hidden;position:relative;
+}
+
+/* ─── Background ─── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(201,168,76,.08) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 0% 100%, rgba(201,168,76,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 100% 100%, rgba(201,168,76,.05) 0%, transparent 60%);
+}
+
+/* Grid pattern */
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(201,168,76,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,.04) 1px, transparent 1px);
+  background-size:40px 40px;
+}
+
+/* ─── Top badge ─── */
+.top-wrap{position:relative;z-index:2;text-align:center;margin-bottom:28px;animation:fadeDown .6s ease both;}
+.brand{font-size:11px;font-weight:700;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+.divider-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto;}
+
+/* ─── Card ─── */
+.card{
+  position:relative;z-index:2;
+  width:100%;max-width:390px;
+  background:var(--card);
+  border-radius:20px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  box-shadow:
+    0 40px 80px rgba(0,0,0,.8),
+    0 0 0 1px rgba(201,168,76,.1),
+    inset 0 1px 0 rgba(201,168,76,.15);
+  animation:fadeUp .6s ease both .1s;
+}
+
+/* Gold top line */
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold3),var(--gold),var(--gold3),transparent);
+}
+
+/* ─── Header ─── */
+.card-head{
+  padding:32px 24px 24px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.emblem{
+  width:72px;height:72px;
+  margin:0 auto 16px;
+  position:relative;
+}
+.emblem svg{width:100%;height:100%;}
+.card-head h1{
+  font-size:20px;font-weight:900;
+  letter-spacing:.5px;margin-bottom:5px;
+  background:linear-gradient(135deg,var(--white),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.card-head p{font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;}
+
+/* ─── Body ─── */
+.card-body{padding:22px 24px;}
+
+/* Status strip */
+.status-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.strip-item{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(201,168,76,.12);
+  border-radius:10px;padding:12px 14px;
+}
+.strip-label{font-size:10px;color:rgba(201,168,76,.6);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
+.strip-val{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.pip{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.15);flex-shrink:0;transition:background .4s;}
+.pip.ok{background:#4caf7d;box-shadow:0 0 6px rgba(76,175,125,.6);}
+.pip.bad{background:#e53935;box-shadow:0 0 6px rgba(229,57,53,.6);}
+.pip.loading{background:var(--gold);animation:blink .8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Fields */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:10px;font-weight:700;color:rgba(201,168,76,.7);margin-bottom:7px;letter-spacing:.8px;text-transform:uppercase;}
+.input-wrap{position:relative;}
+.input-wrap input,.input-wrap textarea{
+  width:100%;padding:13px 16px 13px 46px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(201,168,76,.15);
+  border-radius:10px;
+  font-family:inherit;font-size:15px;font-weight:600;
+  color:var(--white);outline:none;
+  transition:all .25s;direction:ltr;text-align:right;
+}
+.input-wrap textarea{padding:13px 16px;resize:vertical;min-height:90px;direction:rtl;text-align:right;font-size:13px;font-weight:400;}
+.input-wrap input::placeholder,.input-wrap textarea::placeholder{color:rgba(255,255,255,.2);}
+.input-wrap input:focus,.input-wrap textarea:focus{
+  border-color:var(--gold);
+  background:rgba(201,168,76,.06);
+  box-shadow:0 0 0 3px rgba(201,168,76,.08);
+}
+.input-wrap .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;opacity:.5;pointer-events:none;}
+
+/* Buttons */
+.btn-main{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,#8b6914,var(--gold),var(--gold2),var(--gold));
+  border:none;border-radius:10px;
+  font-family:inherit;font-size:15px;font-weight:800;
+  color:#1a0f00;cursor:pointer;
+  transition:all .25s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 24px rgba(201,168,76,.25);
+  margin-bottom:10px;
+  letter-spacing:.3px;
+}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,168,76,.35);}
+.btn-main:active{transform:none;}
+.btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+.btn-secondary{
+  width:100%;padding:13px;
+  background:rgba(201,168,76,.08);
+  border:1px solid rgba(201,168,76,.2);
+  border-radius:10px;
+  font-family:inherit;font-size:14px;font-weight:700;
+  color:var(--gold2);cursor:pointer;
+  transition:all .25s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:10px;
+}
+.btn-secondary:hover{background:rgba(201,168,76,.14);border-color:rgba(201,168,76,.35);}
+.btn-secondary:disabled{opacity:.45;cursor:not-allowed;}
+
+.btn-refresh{
+  width:100%;padding:10px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  font-family:inherit;font-size:12px;font-weight:600;
+  color:rgba(255,255,255,.35);cursor:pointer;transition:all .2s;
+}
+.btn-refresh:hover{border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.6);}
+
+/* Payment section */
+.payment-section{
+  display:none;margin-top:16px;padding:16px;
+  background:rgba(201,168,76,.06);
+  border:1px solid rgba(201,168,76,.2);
+  border-radius:12px;animation:fadeIn .4s ease;
+}
+.payment-section.show{display:block;}
+.payment-amount{font-size:26px;font-weight:900;color:var(--gold2);text-align:center;margin-bottom:3px;text-shadow:0 0 20px rgba(201,168,76,.3);}
+.payment-label{font-size:11px;color:rgba(201,168,76,.6);text-align:center;margin-bottom:14px;letter-spacing:.5px;}
+.divider{height:1px;background:rgba(201,168,76,.12);margin:14px 0;}
+
+/* Alerts */
+.alert{display:flex;align-items:flex-start;gap:10px;padding:13px 15px;border-radius:10px;font-size:13px;font-weight:600;line-height:1.5;margin-top:12px;animation:fadeIn .3s ease;}
+.alert.success{background:rgba(76,175,125,.1);color:#80e5a8;border:1px solid rgba(76,175,125,.2);}
+.alert.error{background:rgba(229,57,53,.1);color:#ff8a80;border:1px solid rgba(229,57,53,.2);}
+.alert.warn{background:rgba(201,168,76,.1);color:var(--gold2);border:1px solid rgba(201,168,76,.2);}
+.alert-ico{font-size:16px;flex-shrink:0;margin-top:1px;}
+
+/* Footer */
+.card-foot{padding:14px 24px;border-top:1px solid var(--border);background:rgba(0,0,0,.3);text-align:center;}
+.card-foot p{font-size:11px;color:rgba(255,255,255,.25);line-height:1.7;}
+.device-id{font-size:9px;color:rgba(201,168,76,.2);margin-top:3px;direction:ltr;word-break:break-all;}
+
+.spin{width:18px;height:18px;border:2px solid rgba(0,0,0,.2);border-top-color:#1a0f00;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="top-wrap">
+  <div class="brand">نظام تسجيل الحضور</div>
+  <div class="divider-line"></div>
+</div>
+
+<div class="card">
+  <!-- Head -->
+  <div class="card-head">
+    <div class="emblem">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shield shape -->
+        <path d="M50 5 L90 20 L90 55 Q90 80 50 95 Q10 80 10 55 L10 20 Z" fill="#1a1a1a" stroke="#c9a84c" stroke-width="2"/>
+        <!-- Inner shield -->
+        <path d="M50 15 L82 27 L82 55 Q82 74 50 86 Q18 74 18 55 L18 27 Z" fill="none" stroke="rgba(201,168,76,.3)" stroke-width="1"/>
+        <!-- Football -->
+        <circle cx="50" cy="52" r="18" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+        <circle cx="50" cy="52" r="5" fill="#c9a84c"/>
+        <line x1="50" y1="34" x2="50" y2="70" stroke="#c9a84c" stroke-width="1" opacity=".5"/>
+        <line x1="32" y1="52" x2="68" y2="52" stroke="#c9a84c" stroke-width="1" opacity=".5"/>
+        <!-- Stars -->
+        <text x="50" y="25" text-anchor="middle" fill="#c9a84c" font-size="8">★ ★ ★</text>
+      </svg>
+    </div>
+    <h1>تسجيل الحضور</h1>
+    <p>يتحقق من موقعك وجهازك تلقائياً</p>
+  </div>
+
+  <!-- Body -->
+  <div class="card-body">
+    <div class="status-strip">
+      <div class="strip-item">
+        <div class="strip-label">الموقع</div>
+        <div class="strip-val"><div class="pip loading" id="gps-pip"></div><span id="gps-txt">جاري التحديد</span></div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-label">المنطقة</div>
+        <div class="strip-val"><div class="pip" id="zone-pip"></div><span id="zone-txt">—</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>رقم جوالك</label>
+      <div class="input-wrap">
+        <span class="ico">📱</span>
+        <input type="tel" id="phone" placeholder="05XXXXXXXX" maxlength="10"
+          onkeydown="if(event.key==='Enter') doCheckIn()">
+      </div>
+    </div>
+
+    <button class="btn-main" id="checkin-btn" onclick="doCheckIn()">تسجيل الحضور</button>
+    <button class="btn-refresh" onclick="getLocation()">تحديث الموقع</button>
+
+    <div id="alert-box"></div>
+
+    <!-- Payment Section -->
+    <div class="payment-section" id="payment-section">
+      <div class="payment-amount" id="payment-amount">—</div>
+      <div class="payment-label">المبلغ المطلوب منك</div>
+      <div class="divider"></div>
+      <div class="field">
+        <label>الصق نص الإيصال هنا</label>
+        <div class="input-wrap">
+          <textarea id="receipt-text" placeholder="الصق نص الإيصال أو رقم العملية هنا..."></textarea>
+        </div>
+      </div>
+      <button class="btn-secondary" id="btn-send" onclick="sendReceipt()">
+        📤 إرسال الإيصال للمدير
+      </button>
+      <div id="payment-alert"></div>
+    </div>
+  </div>
+
+  <div class="card-foot">
+    <p>جهاز واحد — رقم واحد فقط<br>لا يمكن تسجيل أكثر من شخص من نفس الجهاز</p>
+    <div class="device-id" id="did-display"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
+  authDomain: "attendance-5df07.firebaseapp.com",
+  projectId: "attendance-5df07",
+  storageBucket: "attendance-5df07.firebasestorage.app",
+  messagingSenderId: "1028227731064",
+  appId: "1:1028227731064:web:81c2902d98b0e52437278d"
+};
+
+const ZONE_LAT=24.783556, ZONE_LNG=46.724472, ZONE_RADIUS_M=100;
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+function getDeviceId(){
+  let id=localStorage.getItem('__did__');
+  if(!id){ id='D-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,7).toUpperCase(); localStorage.setItem('__did__',id); }
+  return id;
+}
+const DEVICE_ID=getDeviceId();
+document.getElementById('did-display').textContent='ID: '+DEVICE_ID;
+
+function dist(la1,lo1,la2,lo2){
+  const R=6371000,d2r=Math.PI/180;
+  const dLa=(la2-la1)*d2r,dLo=(lo2-lo1)*d2r;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*d2r)*Math.cos(la2*d2r)*Math.sin(dLo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+let pos=null, checkedInPhone=null;
+
+function alert_(elId,type,ico,msg){
+  document.getElementById(elId).innerHTML=`<div class="alert ${type}"><span class="alert-ico">${ico}</span><span>${msg}</span></div>`;
+}
+
+window.getLocation=function(){
+  const pip=document.getElementById('gps-pip'),txt=document.getElementById('gps-txt');
+  const zpip=document.getElementById('zone-pip'),ztxt=document.getElementById('zone-txt');
+  pip.className='pip loading'; txt.textContent='جاري التحديد...';
+  zpip.className='pip'; ztxt.textContent='—';
+  if(!navigator.geolocation){ pip.className='pip bad'; txt.textContent='غير مدعوم'; return; }
+  function onSuccess(p){
+    pos=p.coords; pip.className='pip ok';
+    txt.textContent=pos.latitude.toFixed(4)+', '+pos.longitude.toFixed(4);
+    const d=dist(pos.latitude,pos.longitude,ZONE_LAT,ZONE_LNG);
+    zpip.className='pip '+(d<=ZONE_RADIUS_M?'ok':'bad');
+    ztxt.textContent=d<=ZONE_RADIUS_M?'داخل المنطقة ✓':'خارج النطاق ✗';
+  }
+  function onError(err){
+    pip.className='pip bad';
+    const msgs={1:'الإذن مرفوض',2:'تعذّر التحديد',3:'انتهت المهلة'};
+    txt.textContent=msgs[err.code]||'خطأ';
+    alert_('alert-box','error','📍',msgs[err.code]||'تعذّر تحديد الموقع');
+  }
+  navigator.geolocation.getCurrentPosition(onSuccess,
+    ()=>navigator.geolocation.getCurrentPosition(onSuccess,onError,{enableHighAccuracy:false,timeout:15000,maximumAge:30000}),
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+
+window.doCheckIn=async function(){
+  const phone=document.getElementById('phone').value.trim();
+  const btn=document.getElementById('checkin-btn');
+  if(phone.length<10){ alert_('alert-box','error','⚠️','أدخل رقم جوال صحيح'); return; }
+  if(!pos){ alert_('alert-box','warn','📍','اضغط تحديث الموقع أولاً'); return; }
+  btn.disabled=true; btn.innerHTML='<div class="spin"></div>';
+  try{
+    const d=dist(pos.latitude,pos.longitude,ZONE_LAT,ZONE_LNG);
+    if(d>ZONE_RADIUS_M){ alert_('alert-box','error','📍',`خارج المنطقة بـ ${Math.round(d)} متر`); done(btn); return; }
+    const devSnap=await getDocs(query(collection(db,'users'),where('deviceId','==',DEVICE_ID)));
+    if(!devSnap.empty && devSnap.docs[0].data().phone!==phone){ alert_('alert-box','error','🚫','هذا الجهاز مسجّل برقم آخر'); done(btn); return; }
+    const userDoc=await getDoc(doc(db,'users',phone));
+    if(userDoc.exists() && userDoc.data().deviceId!==DEVICE_ID){ alert_('alert-box','error','🚫','هذا الرقم مرتبط بجهاز آخر'); done(btn); return; }
+    if(!userDoc.exists()){ await setDoc(doc(db,'users',phone),{phone,deviceId:DEVICE_ID,registeredAt:new Date().toISOString()}); }
+    await addDoc(collection(db,'attendance'),{phone,deviceId:DEVICE_ID,lat:pos.latitude,lng:pos.longitude,accuracy:pos.accuracy,time:new Date().toISOString()});
+    checkedInPhone=phone;
+    alert_('alert-box','success','✅',`تم تسجيل حضورك — ${new Date().toLocaleTimeString('ar-SA')}`);
+    await showPaymentSection(phone);
+  } catch(e){ alert_('alert-box','error','❌','حدث خطأ، حاول مرة أخرى'); console.error(e); }
+  done(btn);
+}
+
+async function showPaymentSection(phone){
+  try{
+    const empDoc=await getDoc(doc(db,'employees',phone));
+    if(empDoc.exists() && empDoc.data().amount>0){
+      document.getElementById('payment-amount').textContent=empDoc.data().amount+' ريال';
+      document.getElementById('payment-section').classList.add('show');
+    }
+  } catch(e){ console.error(e); }
+}
+
+window.sendReceipt=async function(){
+  if(!checkedInPhone){ alert_('payment-alert','error','⚠️','سجّل حضورك أولاً'); return; }
+  const text=document.getElementById('receipt-text').value.trim();
+  if(!text){ alert_('payment-alert','warn','⚠️','الصق نص الإيصال أولاً'); return; }
+  const btn=document.getElementById('btn-send');
+  btn.disabled=true; btn.textContent='جاري الإرسال...';
+  try{
+    await addDoc(collection(db,'payments'),{phone:checkedInPhone,receiptText:text,status:'pending',time:new Date().toISOString()});
+    alert_('payment-alert','success','✅','تم إرسال الإيصال للمدير بنجاح');
+    document.getElementById('receipt-text').value='';
+    btn.textContent='✅ تم الإرسال';
+  } catch(e){
+    alert_('payment-alert','error','❌','فشل الإرسال، حاول مرة أخرى');
+    btn.disabled=false; btn.textContent='📤 إرسال الإيصال للمدير';
+  }
+}
+
+function done(btn){ btn.disabled=false; btn.textContent='تسجيل الحضور'; }
+getLocation();
+</script>
+</body>
+</html>
