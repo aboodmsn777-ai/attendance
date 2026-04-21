@@ -483,7 +483,17 @@ window.deleteEmployee=async function(phone,name){
 }
 
 window.updatePayment=async function(id,status){
-  await updateDoc(doc(db,'payments',id),{status});
+  // جلب بيانات الدفعة قبل التحديث
+  const payment=allPayments.find(p=>p.id===id);
+  const amount=payment?.amount||0;
+  const name=payment?.name||allEmployees[payment?.phone]?.name||'—';
+  
+  // تحديث الحالة مع إضافة المبلغ والوقت
+  await updateDoc(doc(db,'payments',id),{
+    status,
+    confirmedAt: status==='confirmed' ? new Date().toISOString() : null,
+    amount: amount
+  });
   await loadData();
 }
 

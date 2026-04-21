@@ -9,9 +9,9 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --gold:#d4a843;--gold2:#f5c842;--gold3:#ffe066;
-  --silver:#b8c4cc;--silver2:#dce8f0;--silver3:#f0f4f8;
-  --dark:#080808;--dark2:#111;--dark3:#1c1c1c;
-  --card:rgba(12,12,12,.88);--border:rgba(212,168,67,.2);
+  --silver:#b8c4cc;--silver2:#dce8f0;
+  --dark:#0a0a0a;--card:rgba(16,16,16,.97);
+  --border:rgba(212,168,67,.18);--border2:rgba(184,196,204,.12);
   --white:#fff;--muted:rgba(255,255,255,.4);
 }
 
@@ -21,336 +21,144 @@ body{
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   padding:20px;color:var(--white);
-  overflow-x:hidden;position:relative;
+  background:var(--dark);
+  overflow-x:hidden;
 }
 
-/* ─── Camp Nou SVG Background ─── */
-.bg{
-  position:fixed;inset:0;z-index:0;
-  background:#050a10;
-  overflow:hidden;
-}
-
-/* Stadium structure */
-.bg svg{width:100%;height:100%;position:absolute;top:0;left:0;}
-
-/* Dark overlay for readability */
-.bg-overlay{
-  position:absolute;inset:0;
+/* subtle background */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    linear-gradient(to bottom, rgba(5,10,16,.5) 0%, rgba(5,10,16,.3) 40%, rgba(5,10,16,.7) 100%),
-    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(212,168,67,.05) 0%, transparent 70%);
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(212,168,67,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 0% 100%, rgba(184,196,204,.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 100% 100%, rgba(184,196,204,.04) 0%, transparent 60%);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(212,168,67,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,67,.03) 1px,transparent 1px);
+  background-size:44px 44px;
 }
 
-/* Gold shimmer lines */
-.bg-lines{
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(212,168,67,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(212,168,67,.04) 1px, transparent 1px);
-  background-size:50px 50px;
-}
+/* Top brand */
+.top-wrap{position:relative;z-index:2;text-align:center;margin-bottom:20px;animation:fadeDown .6s ease both;}
+.club-name{font-size:26px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,var(--silver2),var(--gold2),var(--silver2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:3px;}
+.club-sub{font-size:10px;letter-spacing:4px;color:rgba(212,168,67,.5);font-weight:500;}
+.gold-line{width:70px;height:1px;margin:7px auto 0;background:linear-gradient(90deg,transparent,var(--gold2),transparent);}
 
-/* ─── Top brand ─── */
-.top-wrap{
-  position:relative;z-index:2;
-  text-align:center;margin-bottom:24px;
-  animation:fadeDown .7s ease both;
-}
-.club-name{
-  font-size:28px;font-weight:900;
-  letter-spacing:6px;
-  background:linear-gradient(135deg,var(--silver2),var(--gold2),var(--silver3),var(--gold));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-  text-shadow:none;
-  margin-bottom:4px;
-}
-.club-sub{font-size:10px;letter-spacing:4px;color:rgba(212,168,67,.6);font-weight:500;}
-.gold-line{
-  width:80px;height:1px;margin:8px auto 0;
-  background:linear-gradient(90deg,transparent,var(--gold2),transparent);
-}
-
-/* ─── Card ─── */
+/* Card */
 .card{
   position:relative;z-index:2;
-  width:100%;max-width:390px;
+  width:100%;max-width:420px;
   background:var(--card);
-  backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
-  border-radius:22px;
+  border-radius:20px;
   border:1px solid var(--border);
   overflow:hidden;
-  box-shadow:
-    0 40px 80px rgba(0,0,0,.9),
-    0 0 0 1px rgba(212,168,67,.08),
-    inset 0 1px 0 rgba(212,168,67,.12);
-  animation:fadeUp .6s ease both .15s;
+  box-shadow:0 32px 64px rgba(0,0,0,.8),inset 0 1px 0 rgba(212,168,67,.1);
+  animation:fadeUp .5s ease both .1s;
 }
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--silver2),var(--gold2),var(--gold3),var(--gold2),var(--silver2),transparent);}
 
-/* Gold-Silver top bar */
-.card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--silver2),var(--gold2),var(--gold3),var(--gold2),var(--silver2),transparent);
-}
-
-/* ─── Header ─── */
-.card-head{
-  padding:28px 24px 20px;
-  text-align:center;
-  border-bottom:1px solid rgba(212,168,67,.12);
-  position:relative;
-}
-
-/* Shield emblem */
-.emblem{width:76px;height:76px;margin:0 auto 14px;}
+/* Head */
+.card-head{padding:24px 22px 18px;text-align:center;border-bottom:1px solid var(--border);}
+.emblem{width:64px;height:64px;margin:0 auto 12px;}
 .emblem svg{width:100%;height:100%;}
+.card-head h1{font-size:17px;font-weight:900;letter-spacing:1px;margin-bottom:3px;background:linear-gradient(135deg,var(--silver2),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.card-head p{font-size:11px;color:var(--muted);line-height:1.6;}
 
-.card-head h1{
-  font-size:18px;font-weight:900;letter-spacing:1px;margin-bottom:4px;
-  background:linear-gradient(135deg,var(--silver3),var(--gold2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
+/* Player name badge */
+.player-badge{
+  display:none;margin:10px 22px 0;padding:10px 14px;
+  background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);
+  border-radius:10px;text-align:center;
 }
-.card-head p{font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;}
+.player-badge.show{display:block;}
+.player-badge .pname{font-size:16px;font-weight:800;color:var(--gold2);}
+.player-badge .pwelcome{font-size:11px;color:rgba(212,168,67,.6);margin-top:2px;}
 
-/* ─── Body ─── */
-.card-body{padding:20px 22px;}
+/* Body */
+.card-body{padding:18px 22px;}
 
 /* Status strip */
-.status-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
-.strip-item{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(212,168,67,.1);
-  border-radius:10px;padding:11px 13px;
-}
-.strip-label{font-size:10px;color:rgba(212,168,67,.55);font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;}
+.status-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.strip-item{background:rgba(255,255,255,.03);border:1px solid rgba(212,168,67,.1);border-radius:10px;padding:10px 12px;}
+.strip-label{font-size:10px;color:rgba(212,168,67,.5);font-weight:600;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;}
 .strip-val{font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px;color:var(--silver2);}
 .pip{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12);flex-shrink:0;transition:background .4s;}
-.pip.ok{background:#4cde8a;box-shadow:0 0 8px rgba(76,222,138,.5);}
-.pip.bad{background:#ff4444;box-shadow:0 0 8px rgba(255,68,68,.5);}
+.pip.ok{background:#4cde8a;box-shadow:0 0 7px rgba(76,222,138,.5);}
+.pip.bad{background:#ff4444;box-shadow:0 0 7px rgba(255,68,68,.5);}
 .pip.loading{background:var(--gold);animation:blink .8s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* Field */
-.field{margin-bottom:13px;}
-.field label{
-  display:block;font-size:10px;font-weight:700;
-  color:rgba(212,168,67,.6);margin-bottom:6px;
-  letter-spacing:.8px;text-transform:uppercase;
-}
+/* Fields */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:10px;font-weight:700;color:rgba(212,168,67,.55);margin-bottom:6px;letter-spacing:.7px;text-transform:uppercase;}
 .input-wrap{position:relative;}
-.input-wrap input{
-  width:100%;padding:13px 16px 13px 46px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(212,168,67,.15);
-  border-radius:10px;
-  font-family:inherit;font-size:15px;font-weight:600;
-  color:var(--white);outline:none;
-  transition:all .25s;direction:ltr;text-align:right;
-}
+.input-wrap input{width:100%;padding:13px 16px 13px 44px;background:rgba(255,255,255,.04);border:1px solid rgba(212,168,67,.14);border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;color:var(--white);outline:none;transition:all .22s;direction:ltr;text-align:right;}
 .input-wrap input::placeholder{color:rgba(255,255,255,.18);}
-.input-wrap input:focus{
-  border-color:var(--gold);
-  background:rgba(212,168,67,.05);
-  box-shadow:0 0 0 3px rgba(212,168,67,.07);
-}
-.input-wrap .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:17px;opacity:.45;pointer-events:none;}
+.input-wrap input:focus{border-color:var(--gold);background:rgba(212,168,67,.05);}
+.input-wrap .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.4;pointer-events:none;}
 
-/* Buttons */
-.btn-main{
-  width:100%;padding:15px;
-  background:linear-gradient(135deg,#7a5a10,var(--gold),var(--gold2),var(--gold3),var(--gold2));
-  border:none;border-radius:10px;
-  font-family:inherit;font-size:15px;font-weight:900;
-  color:#0d0800;cursor:pointer;
-  transition:all .25s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  box-shadow:0 6px 24px rgba(212,168,67,.28);
-  margin-bottom:10px;letter-spacing:.5px;
-  position:relative;overflow:hidden;
-}
-.btn-main::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%);
-  opacity:0;transition:opacity .2s;
-}
-.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(212,168,67,.38);}
-.btn-main:hover::after{opacity:1;}
+/* Main button */
+.btn-main{width:100%;padding:14px;background:linear-gradient(135deg,#7a5a10,var(--gold),var(--gold2),var(--gold3));border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:900;color:#0d0800;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 5px 20px rgba(212,168,67,.25);margin-bottom:8px;letter-spacing:.4px;}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(212,168,67,.35);}
 .btn-main:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
-/* Upload button */
-.upload-label{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:13px;
-  background:rgba(184,196,204,.06);
-  border:1.5px dashed rgba(184,196,204,.25);
-  border-radius:10px;
-  font-family:inherit;font-size:13px;font-weight:700;
-  color:var(--silver2);cursor:pointer;
-  transition:all .25s;text-align:center;
-  margin-bottom:10px;
-}
-.upload-label:hover{background:rgba(184,196,204,.1);border-color:rgba(184,196,204,.4);}
-
-.btn-send{
-  width:100%;padding:13px;
-  background:linear-gradient(135deg,rgba(184,196,204,.1),rgba(184,196,204,.18));
-  border:1px solid rgba(184,196,204,.3);
-  border-radius:10px;
-  font-family:inherit;font-size:13px;font-weight:700;
-  color:var(--silver2);cursor:pointer;
-  transition:all .25s;
-  display:none;align-items:center;justify-content:center;gap:8px;
-  margin-bottom:10px;
-}
-.btn-send:hover{background:rgba(184,196,204,.2);border-color:rgba(184,196,204,.5);}
-.btn-send.visible{display:flex;}
-.btn-send:disabled{opacity:.4;cursor:not-allowed;}
-
-.btn-refresh{
-  width:100%;padding:10px;
-  background:transparent;
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:10px;
-  font-family:inherit;font-size:12px;font-weight:600;
-  color:rgba(255,255,255,.3);cursor:pointer;transition:all .2s;
-}
-.btn-refresh:hover{border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.55);}
+.btn-refresh{width:100%;padding:9px;background:transparent;border:1px solid rgba(255,255,255,.06);border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;color:rgba(255,255,255,.28);cursor:pointer;transition:all .2s;margin-bottom:14px;}
+.btn-refresh:hover{border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.5);}
 
 /* Divider */
-.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.15),transparent);margin:14px 0;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.12),transparent);margin:4px 0 14px;}
 
-/* Receipt preview */
-.receipt-preview{
-  width:100%;border-radius:10px;margin-top:10px;
-  border:1px solid rgba(184,196,204,.2);
-  display:none;
-}
+/* Two column layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px;}
 
-/* Payment section */
-.payment-section{
-  display:none;padding:14px;
-  background:rgba(212,168,67,.06);
-  border:1px solid rgba(212,168,67,.18);
-  border-radius:12px;margin-bottom:12px;
-  animation:fadeIn .4s ease;
-}
-.payment-section.show{display:block;}
-.payment-amount{
-  font-size:26px;font-weight:900;
-  background:linear-gradient(135deg,var(--gold2),var(--gold3));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-  text-align:center;margin-bottom:2px;
-}
-.payment-label{font-size:11px;color:rgba(212,168,67,.55);text-align:center;letter-spacing:.5px;}
+/* Upload section */
+.upload-section{}
+.upload-label{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;padding:14px 10px;background:rgba(255,255,255,.03);border:1.5px dashed rgba(184,196,204,.2);border-radius:12px;font-family:inherit;font-size:12px;font-weight:700;color:var(--silver2);cursor:pointer;transition:all .22s;text-align:center;min-height:110px;}
+.upload-label:hover{background:rgba(184,196,204,.07);border-color:rgba(184,196,204,.35);}
+.upload-label .u-ico{font-size:24px;opacity:.7;}
+.receipt-preview{width:100%;border-radius:10px;margin-top:8px;border:1px solid rgba(184,196,204,.15);display:none;max-height:120px;object-fit:cover;}
+.btn-send{width:100%;padding:10px;background:rgba(184,196,204,.08);border:1px solid rgba(184,196,204,.22);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;color:var(--silver2);cursor:pointer;transition:all .22s;display:none;align-items:center;justify-content:center;gap:6px;margin-top:8px;}
+.btn-send.show{display:flex;}
+.btn-send:hover{background:rgba(184,196,204,.15);}
+.btn-send:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Balance section */
+.balance-section{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(212,168,67,.05);border:1px solid rgba(212,168,67,.15);border-radius:12px;padding:14px 10px;min-height:110px;text-align:center;}
+.balance-label{font-size:10px;font-weight:700;color:rgba(212,168,67,.55);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;}
+.balance-amount{font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--gold2),var(--gold3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:4px;}
+.balance-sub{font-size:10px;color:rgba(212,168,67,.45);}
+.balance-confirmed{font-size:11px;color:#4cde8a;font-weight:700;margin-top:6px;display:none;}
+.balance-confirmed.show{display:block;}
 
 /* Alerts */
-.alert{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;line-height:1.5;margin-top:10px;animation:fadeIn .3s ease;}
-.alert.success{background:rgba(76,222,138,.08);color:#7dffc0;border:1px solid rgba(76,222,138,.18);}
-.alert.error{background:rgba(255,68,68,.08);color:#ff9494;border:1px solid rgba(255,68,68,.18);}
-.alert.warn{background:rgba(212,168,67,.08);color:var(--gold2);border:1px solid rgba(212,168,67,.18);}
-.alert-ico{font-size:15px;flex-shrink:0;margin-top:1px;}
+.alert{display:flex;align-items:flex-start;gap:9px;padding:11px 13px;border-radius:10px;font-size:12px;font-weight:600;line-height:1.5;margin-top:10px;animation:fadeIn .3s ease;}
+.alert.success{background:rgba(76,222,138,.07);color:#7dffc0;border:1px solid rgba(76,222,138,.15);}
+.alert.error{background:rgba(255,68,68,.07);color:#ff9494;border:1px solid rgba(255,68,68,.15);}
+.alert.warn{background:rgba(212,168,67,.07);color:var(--gold2);border:1px solid rgba(212,168,67,.15);}
+.alert.info{background:rgba(184,196,204,.07);color:var(--silver2);border:1px solid rgba(184,196,204,.15);}
+.alert-ico{font-size:14px;flex-shrink:0;margin-top:1px;}
+
+/* Payment amount badge */
+.payment-section{display:none;padding:10px 14px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:10px;margin-bottom:10px;text-align:center;animation:fadeIn .4s ease;}
+.payment-section.show{display:block;}
+.payment-amount{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--gold2),var(--gold3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.payment-label{font-size:11px;color:rgba(212,168,67,.5);}
 
 /* Footer */
-.card-foot{padding:13px 22px;border-top:1px solid rgba(212,168,67,.08);background:rgba(0,0,0,.35);text-align:center;}
-.card-foot p{font-size:11px;color:rgba(255,255,255,.2);line-height:1.7;}
-.device-id{font-size:9px;color:rgba(212,168,67,.15);margin-top:3px;direction:ltr;word-break:break-all;}
+.card-foot{padding:12px 22px;border-top:1px solid var(--border);background:rgba(0,0,0,.4);text-align:center;}
+.card-foot p{font-size:10px;color:rgba(255,255,255,.18);line-height:1.7;}
+.device-id{font-size:9px;color:rgba(212,168,67,.12);margin-top:2px;direction:ltr;word-break:break-all;}
 
-.spin{width:18px;height:18px;border:2px solid rgba(0,0,0,.2);border-top-color:#0d0800;border-radius:50%;animation:spin .7s linear infinite;}
+.spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.15);border-top-color:#0d0800;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-@keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 
-<!-- Camp Nou SVG Background -->
-<div class="bg">
-  <svg viewBox="0 0 800 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <!-- Sky -->
-    <rect width="800" height="900" fill="#050a10"/>
-    <!-- Stadium outer structure -->
-    <ellipse cx="400" cy="420" rx="370" ry="300" fill="none" stroke="rgba(180,180,180,.12)" stroke-width="3"/>
-    <ellipse cx="400" cy="420" rx="340" ry="275" fill="none" stroke="rgba(180,180,180,.08)" stroke-width="2"/>
-    <!-- Upper tier stands -->
-    <path d="M60 200 Q400 80 740 200 L720 280 Q400 160 80 280 Z" fill="rgba(30,35,45,.9)" stroke="rgba(100,100,120,.15)" stroke-width="1"/>
-    <!-- Stand rows upper -->
-    <path d="M80 215 Q400 100 720 215" fill="none" stroke="rgba(80,90,110,.2)" stroke-width="1"/>
-    <path d="M85 228 Q400 112 715 228" fill="none" stroke="rgba(80,90,110,.2)" stroke-width="1"/>
-    <path d="M90 241 Q400 124 710 241" fill="none" stroke="rgba(80,90,110,.2)" stroke-width="1"/>
-    <path d="M95 254 Q400 136 705 254" fill="none" stroke="rgba(80,90,110,.18)" stroke-width="1"/>
-    <path d="M100 267 Q400 148 700 267" fill="none" stroke="rgba(80,90,110,.18)" stroke-width="1"/>
-    <!-- Lower tier stands -->
-    <path d="M80 280 Q400 160 720 280 L700 360 Q400 240 100 360 Z" fill="rgba(25,30,40,.95)" stroke="rgba(100,100,120,.12)" stroke-width="1"/>
-    <!-- Stand rows lower -->
-    <path d="M102 293 Q400 173 698 293" fill="none" stroke="rgba(80,90,110,.15)" stroke-width="1"/>
-    <path d="M104 306 Q400 186 696 306" fill="none" stroke="rgba(80,90,110,.15)" stroke-width="1"/>
-    <path d="M106 319 Q400 199 694 319" fill="none" stroke="rgba(80,90,110,.12)" stroke-width="1"/>
-    <path d="M108 332 Q400 212 692 332" fill="none" stroke="rgba(80,90,110,.12)" stroke-width="1"/>
-    <path d="M110 345 Q400 225 690 345" fill="none" stroke="rgba(80,90,110,.1)" stroke-width="1"/>
-    <!-- Pitch -->
-    <ellipse cx="400" cy="500" rx="280" ry="160" fill="#1a4a1a"/>
-    <!-- Grass stripes -->
-    <ellipse cx="400" cy="500" rx="280" ry="160" fill="none" stroke="#1e5a1e" stroke-width="18" stroke-dasharray="30 30"/>
-    <!-- Pitch lines -->
-    <ellipse cx="400" cy="500" rx="272" ry="154" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
-    <line x1="400" y1="346" x2="400" y2="654" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
-    <ellipse cx="400" cy="500" rx="60" ry="40" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
-    <circle cx="400" cy="500" r="4" fill="rgba(255,255,255,.7)"/>
-    <!-- Penalty boxes -->
-    <ellipse cx="400" cy="380" rx="90" ry="40" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>
-    <ellipse cx="400" cy="620" rx="90" ry="40" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>
-    <!-- Floodlights -->
-    <rect x="58" y="60" width="6" height="130" fill="rgba(200,200,200,.4)" rx="2"/>
-    <rect x="736" y="60" width="6" height="130" fill="rgba(200,200,200,.4)" rx="2"/>
-    <rect x="50" y="50" width="22" height="8" fill="rgba(220,220,220,.5)" rx="2"/>
-    <rect x="728" y="50" width="22" height="8" fill="rgba(220,220,220,.5)" rx="2"/>
-    <!-- Light beams -->
-    <path d="M61 58 L200 340" stroke="rgba(255,255,220,.04)" stroke-width="20"/>
-    <path d="M61 58 L350 360" stroke="rgba(255,255,220,.03)" stroke-width="15"/>
-    <path d="M739 58 L600 340" stroke="rgba(255,255,220,.04)" stroke-width="20"/>
-    <path d="M739 58 L450 360" stroke="rgba(255,255,220,.03)" stroke-width="15"/>
-    <!-- Crowd dots -->
-    <g opacity=".5">
-      <circle cx="150" cy="220" r="1.5" fill="#c8b8d0"/>
-      <circle cx="170" cy="215" r="1.5" fill="#d4c4dc"/>
-      <circle cx="190" cy="225" r="1.5" fill="#a00020"/>
-      <circle cx="210" cy="218" r="1.5" fill="#0050a0"/>
-      <circle cx="230" cy="222" r="1.5" fill="#c8b8d0"/>
-      <circle cx="250" cy="216" r="1.5" fill="#d4c4dc"/>
-      <circle cx="270" cy="224" r="1.5" fill="#a00020"/>
-      <circle cx="290" cy="219" r="1.5" fill="#c8b8d0"/>
-      <circle cx="310" cy="221" r="1.5" fill="#0050a0"/>
-      <circle cx="330" cy="217" r="1.5" fill="#d4c4dc"/>
-      <circle cx="350" cy="223" r="1.5" fill="#c8b8d0"/>
-      <circle cx="370" cy="218" r="1.5" fill="#a00020"/>
-      <circle cx="390" cy="220" r="1.5" fill="#c8b8d0"/>
-      <circle cx="410" cy="216" r="1.5" fill="#0050a0"/>
-      <circle cx="430" cy="222" r="1.5" fill="#d4c4dc"/>
-      <circle cx="450" cy="219" r="1.5" fill="#c8b8d0"/>
-      <circle cx="470" cy="221" r="1.5" fill="#a00020"/>
-      <circle cx="490" cy="217" r="1.5" fill="#c8b8d0"/>
-      <circle cx="510" cy="223" r="1.5" fill="#0050a0"/>
-      <circle cx="530" cy="218" r="1.5" fill="#d4c4dc"/>
-      <circle cx="550" cy="220" r="1.5" fill="#c8b8d0"/>
-      <circle cx="570" cy="215" r="1.5" fill="#a00020"/>
-      <circle cx="590" cy="224" r="1.5" fill="#c8b8d0"/>
-      <circle cx="610" cy="219" r="1.5" fill="#0050a0"/>
-      <circle cx="630" cy="221" r="1.5" fill="#d4c4dc"/>
-      <circle cx="650" cy="216" r="1.5" fill="#c8b8d0"/>
-    </g>
-    <!-- Bottom stands -->
-    <path d="M100 360 Q400 240 700 360 L720 430 Q400 310 80 430 Z" fill="rgba(20,24,32,.98)"/>
-  </svg>
-  <div class="bg-overlay"></div>
-  <div class="bg-lines"></div>
-</div>
-
-<!-- Content -->
 <div class="top-wrap">
   <div class="club-name">KNIGHTS FC</div>
   <div class="club-sub">ATTENDANCE SYSTEM</div>
@@ -362,8 +170,6 @@ body{
   <div class="card-head">
     <div class="emblem">
       <svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
-        <!-- Shield -->
-        <path d="M50 4 L92 18 L92 58 Q92 85 50 104 Q8 85 8 58 L8 18 Z" fill="rgba(12,12,12,.9)" stroke="url(#gs)" stroke-width="1.5"/>
         <defs>
           <linearGradient id="gs" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#b8c4cc"/>
@@ -371,19 +177,21 @@ body{
             <stop offset="100%" stop-color="#b8c4cc"/>
           </linearGradient>
         </defs>
-        <!-- Inner shield -->
-        <path d="M50 12 L85 24 L85 58 Q85 80 50 96 Q15 80 15 58 L15 24 Z" fill="none" stroke="rgba(212,168,67,.2)" stroke-width="1"/>
-        <!-- Knight helmet simplified -->
-        <path d="M38 45 L38 35 Q38 28 50 28 Q62 28 62 35 L62 45 L65 55 L60 60 L55 58 L50 62 L45 58 L40 60 L35 55 Z" fill="rgba(212,168,67,.15)" stroke="#d4a843" stroke-width="1"/>
-        <path d="M44 42 L44 36 Q44 32 50 32 Q56 32 56 36 L56 42" fill="none" stroke="rgba(212,168,67,.5)" stroke-width="1"/>
-        <!-- Stars -->
+        <path d="M50 4 L92 18 L92 58 Q92 85 50 104 Q8 85 8 58 L8 18 Z" fill="rgba(12,12,12,.9)" stroke="url(#gs)" stroke-width="1.5"/>
+        <path d="M50 12 L85 24 L85 58 Q85 80 50 96 Q15 80 15 58 L15 24 Z" fill="none" stroke="rgba(212,168,67,.18)" stroke-width="1"/>
+        <path d="M38 45 L38 35 Q38 28 50 28 Q62 28 62 35 L62 45 L65 55 L60 60 L55 58 L50 62 L45 58 L40 60 L35 55 Z" fill="rgba(212,168,67,.12)" stroke="#d4a843" stroke-width="1"/>
         <text x="50" y="80" text-anchor="middle" fill="#d4a843" font-size="7" letter-spacing="3">★ ★ ★</text>
-        <!-- FC text -->
-        <text x="50" y="92" text-anchor="middle" fill="rgba(184,196,204,.6)" font-size="7" letter-spacing="2" font-weight="bold">FC</text>
+        <text x="50" y="92" text-anchor="middle" fill="rgba(184,196,204,.5)" font-size="7" letter-spacing="2" font-weight="bold">FC</text>
       </svg>
     </div>
     <h1>تسجيل الحضور</h1>
     <p>يتحقق من موقعك وجهازك تلقائياً</p>
+  </div>
+
+  <!-- Player name badge -->
+  <div class="player-badge" id="player-badge">
+    <div class="pname" id="player-name">—</div>
+    <div class="pwelcome">أهلاً بك في Knights FC</div>
   </div>
 
   <!-- Body -->
@@ -407,16 +215,18 @@ body{
       <div class="input-wrap">
         <span class="ico">📱</span>
         <input type="tel" id="phone" placeholder="05XXXXXXXX" maxlength="10"
-          onkeydown="if(event.key==='Enter') doCheckIn()">
+          onkeydown="if(event.key==='Enter') doCheckIn()"
+          oninput="onPhoneInput(this.value)">
       </div>
     </div>
 
-    <!-- Check in button -->
+    <!-- Check in -->
     <button class="btn-main" id="checkin-btn" onclick="doCheckIn()">تسجيل الحضور</button>
+    <button class="btn-refresh" onclick="getLocation()">↻ تحديث الموقع</button>
 
     <div id="alert-box"></div>
 
-    <!-- Payment amount (shows after checkin) -->
+    <!-- Payment amount -->
     <div class="payment-section" id="payment-section">
       <div class="payment-amount" id="payment-amount">—</div>
       <div class="payment-label">المبلغ المطلوب منك</div>
@@ -424,36 +234,44 @@ body{
 
     <div class="divider"></div>
 
-    <!-- Receipt upload - always visible -->
-    <div class="field">
-      <label>رفع إيصال الدفع</label>
-      <label class="upload-label" for="receipt-img">
-        📸 &nbsp; اختر صورة الإيصال من الاستوديو
-        <input type="file" id="receipt-img" accept="image/*" style="display:none;" onchange="previewImg(this)">
-      </label>
-      <img id="img-preview" class="receipt-preview" alt="معاينة الإيصال">
+    <!-- Two columns: Upload + Balance -->
+    <div class="two-col">
+
+      <!-- Upload receipt -->
+      <div class="upload-section">
+        <label class="upload-label" for="receipt-img">
+          <span class="u-ico">📸</span>
+          <span>رفع إيصال الدفع</span>
+          <span style="font-size:10px;font-weight:400;color:rgba(184,196,204,.5);">اضغط لاختيار صورة</span>
+          <input type="file" id="receipt-img" accept="image/*" style="display:none;" onchange="previewImg(this)">
+        </label>
+        <img id="img-preview" class="receipt-preview" alt="معاينة">
+        <button class="btn-send" id="btn-send" onclick="sendReceipt()">📤 إرسال للمدير</button>
+        <div id="payment-alert"></div>
+      </div>
+
+      <!-- Balance -->
+      <div class="balance-section">
+        <div class="balance-label">رصيدك</div>
+        <div class="balance-amount" id="balance-amount">0</div>
+        <div class="balance-sub">ريال مؤكد</div>
+        <div class="balance-confirmed" id="balance-confirmed">✅ تم التأكيد</div>
+      </div>
+
     </div>
-
-    <button class="btn-send" id="btn-send" onclick="sendReceipt()">
-      📤 &nbsp; إرسال الإيصال للمدير
-    </button>
-
-    <div id="payment-alert"></div>
-
-    <button class="btn-refresh" onclick="getLocation()">↻ &nbsp; تحديث الموقع</button>
 
   </div>
 
   <!-- Footer -->
   <div class="card-foot">
-    <p>جهاز واحد — رقم واحد فقط<br>لا يمكن تسجيل أكثر من شخص من نفس الجهاز</p>
+    <p>جهاز واحد — رقم واحد فقط</p>
     <div class="device-id" id="did-display"></div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
@@ -483,12 +301,33 @@ function dist(la1,lo1,la2,lo2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-let pos=null, checkedInPhone=null;
+let pos=null, checkedInPhone=null, playerName=null;
 
 function alert_(elId,type,ico,msg){
   document.getElementById(elId).innerHTML=`<div class="alert ${type}"><span class="alert-ico">${ico}</span><span>${msg}</span></div>`;
 }
 
+// ─── جلب اسم اللاعب من قاعدة البيانات عند كتابة الرقم ───
+window.onPhoneInput=async function(val){
+  if(val.length===10){
+    try{
+      const empDoc=await getDoc(doc(db,'employees',val));
+      if(empDoc.exists()&&empDoc.data().name){
+        playerName=empDoc.data().name;
+        document.getElementById('player-name').textContent=playerName;
+        document.getElementById('player-badge').classList.add('show');
+      } else {
+        document.getElementById('player-badge').classList.remove('show');
+        playerName=null;
+      }
+    } catch(e){ console.error(e); }
+  } else {
+    document.getElementById('player-badge').classList.remove('show');
+    playerName=null;
+  }
+}
+
+// ─── GPS ───
 window.getLocation=function(){
   const pip=document.getElementById('gps-pip'),txt=document.getElementById('gps-txt');
   const zpip=document.getElementById('zone-pip'),ztxt=document.getElementById('zone-txt');
@@ -514,6 +353,7 @@ window.getLocation=function(){
   );
 }
 
+// ─── تسجيل الحضور ───
 window.doCheckIn=async function(){
   const phone=document.getElementById('phone').value.trim();
   const btn=document.getElementById('checkin-btn');
@@ -528,86 +368,143 @@ window.doCheckIn=async function(){
     const userDoc=await getDoc(doc(db,'users',phone));
     if(userDoc.exists() && userDoc.data().deviceId!==DEVICE_ID){ alert_('alert-box','error','🚫','هذا الرقم مرتبط بجهاز آخر'); done(btn); return; }
     if(!userDoc.exists()){ await setDoc(doc(db,'users',phone),{phone,deviceId:DEVICE_ID,registeredAt:new Date().toISOString()}); }
-    await addDoc(collection(db,'attendance'),{phone,deviceId:DEVICE_ID,lat:pos.latitude,lng:pos.longitude,accuracy:pos.accuracy,time:new Date().toISOString()});
+    await addDoc(collection(db,'attendance'),{
+      phone, name:playerName||'—', deviceId:DEVICE_ID,
+      lat:pos.latitude, lng:pos.longitude, accuracy:pos.accuracy,
+      time:new Date().toISOString()
+    });
     checkedInPhone=phone;
     localStorage.setItem('__last_phone__',phone);
     localStorage.setItem('__last_checkin__',new Date().toDateString());
-    alert_('alert-box','success','✅',`تم تسجيل حضورك — ${new Date().toLocaleTimeString('ar-SA')}`);
-    await showPaymentAmount(phone);
+    const name=playerName?` — ${playerName}`:'';
+    alert_('alert-box','success','✅',`تم تسجيل حضورك${name} — ${new Date().toLocaleTimeString('ar-SA')}`);
+    await loadPlayerData(phone);
   } catch(e){ alert_('alert-box','error','❌','حدث خطأ، حاول مرة أخرى'); console.error(e); }
   done(btn);
 }
 
-async function showPaymentAmount(phone){
+// ─── جلب بيانات اللاعب (مبلغ + رصيد) ───
+async function loadPlayerData(phone){
   try{
+    // المبلغ المطلوب
     const empDoc=await getDoc(doc(db,'employees',phone));
-    if(empDoc.exists() && empDoc.data().amount>0){
-      document.getElementById('payment-amount').textContent=empDoc.data().amount+' ريال';
-      document.getElementById('payment-section').classList.add('show');
+    if(empDoc.exists()){
+      if(empDoc.data().name){
+        playerName=empDoc.data().name;
+        document.getElementById('player-name').textContent=playerName;
+        document.getElementById('player-badge').classList.add('show');
+      }
+      if(empDoc.data().amount>0){
+        document.getElementById('payment-amount').textContent=empDoc.data().amount+' ريال';
+        document.getElementById('payment-section').classList.add('show');
+      }
+    }
+    // الرصيد (مجموع المدفوعات المؤكدة)
+    await updateBalance(phone);
+  } catch(e){ console.error(e); }
+}
+
+// ─── تحديث الرصيد ───
+async function updateBalance(phone){
+  try{
+    const paySnap=await getDocs(query(
+      collection(db,'payments'),
+      where('phone','==',phone),
+      where('status','==','confirmed')
+    ));
+    let total=0;
+    let lastConfirmed=null;
+    paySnap.docs.forEach(d=>{
+      total+=(d.data().amount||0);
+      lastConfirmed=d.data();
+    });
+    document.getElementById('balance-amount').textContent=total;
+    if(lastConfirmed){
+      document.getElementById('balance-confirmed').classList.add('show');
+    }
+    // تحقق إذا في تأكيد جديد منذ آخر مرة
+    const lastSeen=localStorage.getItem('__last_confirmed__');
+    if(paySnap.docs.length>0){
+      const latestId=paySnap.docs[paySnap.docs.length-1].id;
+      if(lastSeen!==latestId){
+        const amount=paySnap.docs[paySnap.docs.length-1].data().amount||0;
+        alert_('payment-alert','success','💰',`تم تأكيد دفعتك — ${amount} ريال ✅`);
+        localStorage.setItem('__last_confirmed__',latestId);
+      }
     }
   } catch(e){ console.error(e); }
 }
 
-// Restore on reload
+// ─── استعادة الجلسة عند فتح الصفحة ───
 async function restoreSession(){
   const savedPhone=localStorage.getItem('__last_phone__');
   const savedDate=localStorage.getItem('__last_checkin__');
   if(savedPhone && savedDate===new Date().toDateString()){
     checkedInPhone=savedPhone;
     document.getElementById('phone').value=savedPhone;
-    await showPaymentAmount(savedPhone);
+    await loadPlayerData(savedPhone);
   }
 }
 
+// ─── معاينة الصورة ───
 window.previewImg=function(input){
   if(!input.files[0]) return;
   const file=input.files[0];
-  if(file.size>800000){
-    alert_('payment-alert','warn','⚠️','الصورة كبيرة — اختر صورة أصغر من 800KB');
-    return;
-  }
+  if(file.size>900000){ alert_('payment-alert','warn','⚠️','الصورة كبيرة — اختر أصغر من 900KB'); return; }
   const reader=new FileReader();
   reader.onload=e=>{
     const preview=document.getElementById('img-preview');
-    preview.src=e.target.result;
-    preview.style.display='block';
-    document.getElementById('btn-send').classList.add('visible');
+    preview.src=e.target.result; preview.style.display='block';
+    document.getElementById('btn-send').classList.add('show');
   };
   reader.readAsDataURL(file);
 }
 
+// ─── إرسال الإيصال ───
 window.sendReceipt=async function(){
   const preview=document.getElementById('img-preview');
-  if(!preview.src||preview.style.display==='none'){
-    alert_('payment-alert','warn','⚠️','اختر صورة الإيصال أولاً');
-    return;
-  }
+  if(!preview.src||preview.style.display==='none'){ alert_('payment-alert','warn','⚠️','اختر صورة الإيصال أولاً'); return; }
   const phone=checkedInPhone||document.getElementById('phone').value.trim();
   if(phone.length<10){ alert_('payment-alert','error','⚠️','أدخل رقم جوالك أولاً'); return; }
+
+  // جلب المبلغ المطلوب
+  let amount=0;
+  try{
+    const empDoc=await getDoc(doc(db,'employees',phone));
+    if(empDoc.exists()) amount=empDoc.data().amount||0;
+  } catch(e){}
+
   const btn=document.getElementById('btn-send');
-  btn.disabled=true; btn.innerHTML='⏳ &nbsp; جاري الإرسال...';
+  btn.disabled=true; btn.textContent='⏳ جاري الإرسال...';
   try{
     await addDoc(collection(db,'payments'),{
-      phone, receiptImg:preview.src,
-      status:'pending', time:new Date().toISOString()
+      phone, name:playerName||'—',
+      receiptImg:preview.src,
+      amount, status:'pending',
+      time:new Date().toISOString()
     });
-    alert_('payment-alert','success','✅','تم إرسال الإيصال للمدير بنجاح');
+    alert_('payment-alert','info','📨','تم الإرسال — سيتم التأكيد من المدير قريباً');
     preview.style.display='none';
-    btn.classList.remove('visible');
-    btn.disabled=false;
-    btn.innerHTML='📤 &nbsp; إرسال الإيصال للمدير';
+    btn.classList.remove('show');
+    btn.disabled=false; btn.textContent='📤 إرسال للمدير';
     document.getElementById('receipt-img').value='';
   } catch(e){
-    alert_('payment-alert','error','❌','فشل الإرسال — الصورة قد تكون كبيرة جداً');
-    btn.disabled=false;
-    btn.innerHTML='📤 &nbsp; إرسال الإيصال للمدير';
+    alert_('payment-alert','error','❌','فشل الإرسال — الصورة قد تكون كبيرة');
+    btn.disabled=false; btn.textContent='📤 إرسال للمدير';
   }
 }
 
 function done(btn){ btn.disabled=false; btn.textContent='تسجيل الحضور'; }
 
+// تحديث الرصيد كل 30 ثانية
+async function autoCheck(){
+  const phone=checkedInPhone||localStorage.getItem('__last_phone__');
+  if(phone) await updateBalance(phone);
+}
+
 getLocation();
 restoreSession();
+setInterval(autoCheck, 30000);
 </script>
 </body>
 </html>
