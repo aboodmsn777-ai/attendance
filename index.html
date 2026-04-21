@@ -3,225 +3,383 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تسجيل الحضور</title>
+<title>Knights FC</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --gold:#c9a84c;--gold2:#f0c060;--gold3:#ffd700;
-  --dark:#0a0a0a;--dark2:#111111;--dark3:#1a1a1a;
-  --card:rgba(20,20,20,.95);--border:rgba(201,168,76,.2);
-  --white:#fff;--muted:rgba(255,255,255,.45);
+  --gold:#d4a843;--gold2:#f5c842;--gold3:#ffe066;
+  --silver:#b8c4cc;--silver2:#dce8f0;--silver3:#f0f4f8;
+  --dark:#080808;--dark2:#111;--dark3:#1c1c1c;
+  --card:rgba(12,12,12,.88);--border:rgba(212,168,67,.2);
+  --white:#fff;--muted:rgba(255,255,255,.4);
 }
+
 body{
   font-family:'Tajawal',sans-serif;
-  min-height:100vh;display:flex;flex-direction:column;
+  min-height:100vh;
+  display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   padding:20px;color:var(--white);
-  background:var(--dark);overflow-x:hidden;position:relative;
+  overflow-x:hidden;position:relative;
 }
 
-/* ─── Background ─── */
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;
+/* ─── Camp Nou SVG Background ─── */
+.bg{
+  position:fixed;inset:0;z-index:0;
+  background:#050a10;
+  overflow:hidden;
+}
+
+/* Stadium structure */
+.bg svg{width:100%;height:100%;position:absolute;top:0;left:0;}
+
+/* Dark overlay for readability */
+.bg-overlay{
+  position:absolute;inset:0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(201,168,76,.08) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 60% at 0% 100%, rgba(201,168,76,.05) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 60% at 100% 100%, rgba(201,168,76,.05) 0%, transparent 60%);
+    linear-gradient(to bottom, rgba(5,10,16,.5) 0%, rgba(5,10,16,.3) 40%, rgba(5,10,16,.7) 100%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(212,168,67,.05) 0%, transparent 70%);
 }
 
-/* Grid pattern */
-body::after{
-  content:'';position:fixed;inset:0;z-index:0;
+/* Gold shimmer lines */
+.bg-lines{
+  position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(201,168,76,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(201,168,76,.04) 1px, transparent 1px);
-  background-size:40px 40px;
+    linear-gradient(rgba(212,168,67,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,168,67,.04) 1px, transparent 1px);
+  background-size:50px 50px;
 }
 
-/* ─── Top badge ─── */
-.top-wrap{position:relative;z-index:2;text-align:center;margin-bottom:28px;animation:fadeDown .6s ease both;}
-.brand{font-size:11px;font-weight:700;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
-.divider-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto;}
+/* ─── Top brand ─── */
+.top-wrap{
+  position:relative;z-index:2;
+  text-align:center;margin-bottom:24px;
+  animation:fadeDown .7s ease both;
+}
+.club-name{
+  font-size:28px;font-weight:900;
+  letter-spacing:6px;
+  background:linear-gradient(135deg,var(--silver2),var(--gold2),var(--silver3),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  text-shadow:none;
+  margin-bottom:4px;
+}
+.club-sub{font-size:10px;letter-spacing:4px;color:rgba(212,168,67,.6);font-weight:500;}
+.gold-line{
+  width:80px;height:1px;margin:8px auto 0;
+  background:linear-gradient(90deg,transparent,var(--gold2),transparent);
+}
 
 /* ─── Card ─── */
 .card{
   position:relative;z-index:2;
   width:100%;max-width:390px;
   background:var(--card);
-  border-radius:20px;
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-radius:22px;
   border:1px solid var(--border);
   overflow:hidden;
   box-shadow:
-    0 40px 80px rgba(0,0,0,.8),
-    0 0 0 1px rgba(201,168,76,.1),
-    inset 0 1px 0 rgba(201,168,76,.15);
-  animation:fadeUp .6s ease both .1s;
+    0 40px 80px rgba(0,0,0,.9),
+    0 0 0 1px rgba(212,168,67,.08),
+    inset 0 1px 0 rgba(212,168,67,.12);
+  animation:fadeUp .6s ease both .15s;
 }
 
-/* Gold top line */
+/* Gold-Silver top bar */
 .card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--gold3),var(--gold),var(--gold3),transparent);
+  background:linear-gradient(90deg,transparent,var(--silver2),var(--gold2),var(--gold3),var(--gold2),var(--silver2),transparent);
 }
 
 /* ─── Header ─── */
 .card-head{
-  padding:32px 24px 24px;
+  padding:28px 24px 20px;
   text-align:center;
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid rgba(212,168,67,.12);
   position:relative;
 }
-.emblem{
-  width:72px;height:72px;
-  margin:0 auto 16px;
-  position:relative;
-}
+
+/* Shield emblem */
+.emblem{width:76px;height:76px;margin:0 auto 14px;}
 .emblem svg{width:100%;height:100%;}
+
 .card-head h1{
-  font-size:20px;font-weight:900;
-  letter-spacing:.5px;margin-bottom:5px;
-  background:linear-gradient(135deg,var(--white),var(--gold2));
+  font-size:18px;font-weight:900;letter-spacing:1px;margin-bottom:4px;
+  background:linear-gradient(135deg,var(--silver3),var(--gold2));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   background-clip:text;
 }
 .card-head p{font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;}
 
 /* ─── Body ─── */
-.card-body{padding:22px 24px;}
+.card-body{padding:20px 22px;}
 
 /* Status strip */
-.status-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.status-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
 .strip-item{
   background:rgba(255,255,255,.03);
-  border:1px solid rgba(201,168,76,.12);
-  border-radius:10px;padding:12px 14px;
+  border:1px solid rgba(212,168,67,.1);
+  border-radius:10px;padding:11px 13px;
 }
-.strip-label{font-size:10px;color:rgba(201,168,76,.6);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
-.strip-val{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
-.pip{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.15);flex-shrink:0;transition:background .4s;}
-.pip.ok{background:#4caf7d;box-shadow:0 0 6px rgba(76,175,125,.6);}
-.pip.bad{background:#e53935;box-shadow:0 0 6px rgba(229,57,53,.6);}
+.strip-label{font-size:10px;color:rgba(212,168,67,.55);font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;}
+.strip-val{font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px;color:var(--silver2);}
+.pip{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12);flex-shrink:0;transition:background .4s;}
+.pip.ok{background:#4cde8a;box-shadow:0 0 8px rgba(76,222,138,.5);}
+.pip.bad{background:#ff4444;box-shadow:0 0 8px rgba(255,68,68,.5);}
 .pip.loading{background:var(--gold);animation:blink .8s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* Fields */
-.field{margin-bottom:14px;}
-.field label{display:block;font-size:10px;font-weight:700;color:rgba(201,168,76,.7);margin-bottom:7px;letter-spacing:.8px;text-transform:uppercase;}
+/* Field */
+.field{margin-bottom:13px;}
+.field label{
+  display:block;font-size:10px;font-weight:700;
+  color:rgba(212,168,67,.6);margin-bottom:6px;
+  letter-spacing:.8px;text-transform:uppercase;
+}
 .input-wrap{position:relative;}
-.input-wrap input,.input-wrap textarea{
+.input-wrap input{
   width:100%;padding:13px 16px 13px 46px;
   background:rgba(255,255,255,.04);
-  border:1px solid rgba(201,168,76,.15);
+  border:1px solid rgba(212,168,67,.15);
   border-radius:10px;
   font-family:inherit;font-size:15px;font-weight:600;
   color:var(--white);outline:none;
   transition:all .25s;direction:ltr;text-align:right;
 }
-.input-wrap textarea{padding:13px 16px;resize:vertical;min-height:90px;direction:rtl;text-align:right;font-size:13px;font-weight:400;}
-.input-wrap input::placeholder,.input-wrap textarea::placeholder{color:rgba(255,255,255,.2);}
-.input-wrap input:focus,.input-wrap textarea:focus{
+.input-wrap input::placeholder{color:rgba(255,255,255,.18);}
+.input-wrap input:focus{
   border-color:var(--gold);
-  background:rgba(201,168,76,.06);
-  box-shadow:0 0 0 3px rgba(201,168,76,.08);
+  background:rgba(212,168,67,.05);
+  box-shadow:0 0 0 3px rgba(212,168,67,.07);
 }
-.input-wrap .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;opacity:.5;pointer-events:none;}
+.input-wrap .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:17px;opacity:.45;pointer-events:none;}
 
 /* Buttons */
 .btn-main{
   width:100%;padding:15px;
-  background:linear-gradient(135deg,#8b6914,var(--gold),var(--gold2),var(--gold));
+  background:linear-gradient(135deg,#7a5a10,var(--gold),var(--gold2),var(--gold3),var(--gold2));
   border:none;border-radius:10px;
-  font-family:inherit;font-size:15px;font-weight:800;
-  color:#1a0f00;cursor:pointer;
+  font-family:inherit;font-size:15px;font-weight:900;
+  color:#0d0800;cursor:pointer;
   transition:all .25s;
   display:flex;align-items:center;justify-content:center;gap:8px;
-  box-shadow:0 6px 24px rgba(201,168,76,.25);
-  margin-bottom:10px;
-  letter-spacing:.3px;
+  box-shadow:0 6px 24px rgba(212,168,67,.28);
+  margin-bottom:10px;letter-spacing:.5px;
+  position:relative;overflow:hidden;
 }
-.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,168,76,.35);}
-.btn-main:active{transform:none;}
-.btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.btn-main::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%);
+  opacity:0;transition:opacity .2s;
+}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(212,168,67,.38);}
+.btn-main:hover::after{opacity:1;}
+.btn-main:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
-.btn-secondary{
-  width:100%;padding:13px;
-  background:rgba(201,168,76,.08);
-  border:1px solid rgba(201,168,76,.2);
-  border-radius:10px;
-  font-family:inherit;font-size:14px;font-weight:700;
-  color:var(--gold2);cursor:pointer;
-  transition:all .25s;
+/* Upload button */
+.upload-label{
   display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px;
+  background:rgba(184,196,204,.06);
+  border:1.5px dashed rgba(184,196,204,.25);
+  border-radius:10px;
+  font-family:inherit;font-size:13px;font-weight:700;
+  color:var(--silver2);cursor:pointer;
+  transition:all .25s;text-align:center;
   margin-bottom:10px;
 }
-.btn-secondary:hover{background:rgba(201,168,76,.14);border-color:rgba(201,168,76,.35);}
-.btn-secondary:disabled{opacity:.45;cursor:not-allowed;}
+.upload-label:hover{background:rgba(184,196,204,.1);border-color:rgba(184,196,204,.4);}
+
+.btn-send{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,rgba(184,196,204,.1),rgba(184,196,204,.18));
+  border:1px solid rgba(184,196,204,.3);
+  border-radius:10px;
+  font-family:inherit;font-size:13px;font-weight:700;
+  color:var(--silver2);cursor:pointer;
+  transition:all .25s;
+  display:none;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:10px;
+}
+.btn-send:hover{background:rgba(184,196,204,.2);border-color:rgba(184,196,204,.5);}
+.btn-send.visible{display:flex;}
+.btn-send:disabled{opacity:.4;cursor:not-allowed;}
 
 .btn-refresh{
   width:100%;padding:10px;
   background:transparent;
-  border:1px solid rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.06);
   border-radius:10px;
   font-family:inherit;font-size:12px;font-weight:600;
-  color:rgba(255,255,255,.35);cursor:pointer;transition:all .2s;
+  color:rgba(255,255,255,.3);cursor:pointer;transition:all .2s;
 }
-.btn-refresh:hover{border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.6);}
+.btn-refresh:hover{border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.55);}
+
+/* Divider */
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.15),transparent);margin:14px 0;}
+
+/* Receipt preview */
+.receipt-preview{
+  width:100%;border-radius:10px;margin-top:10px;
+  border:1px solid rgba(184,196,204,.2);
+  display:none;
+}
 
 /* Payment section */
 .payment-section{
-  display:none;margin-top:16px;padding:16px;
-  background:rgba(201,168,76,.06);
-  border:1px solid rgba(201,168,76,.2);
-  border-radius:12px;animation:fadeIn .4s ease;
+  display:none;padding:14px;
+  background:rgba(212,168,67,.06);
+  border:1px solid rgba(212,168,67,.18);
+  border-radius:12px;margin-bottom:12px;
+  animation:fadeIn .4s ease;
 }
 .payment-section.show{display:block;}
-.payment-amount{font-size:26px;font-weight:900;color:var(--gold2);text-align:center;margin-bottom:3px;text-shadow:0 0 20px rgba(201,168,76,.3);}
-.payment-label{font-size:11px;color:rgba(201,168,76,.6);text-align:center;margin-bottom:14px;letter-spacing:.5px;}
-.divider{height:1px;background:rgba(201,168,76,.12);margin:14px 0;}
+.payment-amount{
+  font-size:26px;font-weight:900;
+  background:linear-gradient(135deg,var(--gold2),var(--gold3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  text-align:center;margin-bottom:2px;
+}
+.payment-label{font-size:11px;color:rgba(212,168,67,.55);text-align:center;letter-spacing:.5px;}
 
 /* Alerts */
-.alert{display:flex;align-items:flex-start;gap:10px;padding:13px 15px;border-radius:10px;font-size:13px;font-weight:600;line-height:1.5;margin-top:12px;animation:fadeIn .3s ease;}
-.alert.success{background:rgba(76,175,125,.1);color:#80e5a8;border:1px solid rgba(76,175,125,.2);}
-.alert.error{background:rgba(229,57,53,.1);color:#ff8a80;border:1px solid rgba(229,57,53,.2);}
-.alert.warn{background:rgba(201,168,76,.1);color:var(--gold2);border:1px solid rgba(201,168,76,.2);}
-.alert-ico{font-size:16px;flex-shrink:0;margin-top:1px;}
+.alert{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;line-height:1.5;margin-top:10px;animation:fadeIn .3s ease;}
+.alert.success{background:rgba(76,222,138,.08);color:#7dffc0;border:1px solid rgba(76,222,138,.18);}
+.alert.error{background:rgba(255,68,68,.08);color:#ff9494;border:1px solid rgba(255,68,68,.18);}
+.alert.warn{background:rgba(212,168,67,.08);color:var(--gold2);border:1px solid rgba(212,168,67,.18);}
+.alert-ico{font-size:15px;flex-shrink:0;margin-top:1px;}
 
 /* Footer */
-.card-foot{padding:14px 24px;border-top:1px solid var(--border);background:rgba(0,0,0,.3);text-align:center;}
-.card-foot p{font-size:11px;color:rgba(255,255,255,.25);line-height:1.7;}
-.device-id{font-size:9px;color:rgba(201,168,76,.2);margin-top:3px;direction:ltr;word-break:break-all;}
+.card-foot{padding:13px 22px;border-top:1px solid rgba(212,168,67,.08);background:rgba(0,0,0,.35);text-align:center;}
+.card-foot p{font-size:11px;color:rgba(255,255,255,.2);line-height:1.7;}
+.device-id{font-size:9px;color:rgba(212,168,67,.15);margin-top:3px;direction:ltr;word-break:break-all;}
 
-.spin{width:18px;height:18px;border:2px solid rgba(0,0,0,.2);border-top-color:#1a0f00;border-radius:50%;animation:spin .7s linear infinite;}
+.spin{width:18px;height:18px;border:2px solid rgba(0,0,0,.2);border-top-color:#0d0800;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 
+<!-- Camp Nou SVG Background -->
+<div class="bg">
+  <svg viewBox="0 0 800 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <!-- Sky -->
+    <rect width="800" height="900" fill="#050a10"/>
+    <!-- Stadium outer structure -->
+    <ellipse cx="400" cy="420" rx="370" ry="300" fill="none" stroke="rgba(180,180,180,.12)" stroke-width="3"/>
+    <ellipse cx="400" cy="420" rx="340" ry="275" fill="none" stroke="rgba(180,180,180,.08)" stroke-width="2"/>
+    <!-- Upper tier stands -->
+    <path d="M60 200 Q400 80 740 200 L720 280 Q400 160 80 280 Z" fill="rgba(30,35,45,.9)" stroke="rgba(100,100,120,.15)" stroke-width="1"/>
+    <!-- Stand rows upper -->
+    <path d="M80 215 Q400 100 720 215" fill="none" stroke="rgba(80,90,110,.2)" stroke-width="1"/>
+    <path d="M85 228 Q400 112 715 228" fill="none" stroke="rgba(80,90,110,.2)" stroke-width="1"/>
+    <path d="M90 241 Q400 124 710 241" fill="none" stroke="rgba(80,90,110,.2)" stroke-width="1"/>
+    <path d="M95 254 Q400 136 705 254" fill="none" stroke="rgba(80,90,110,.18)" stroke-width="1"/>
+    <path d="M100 267 Q400 148 700 267" fill="none" stroke="rgba(80,90,110,.18)" stroke-width="1"/>
+    <!-- Lower tier stands -->
+    <path d="M80 280 Q400 160 720 280 L700 360 Q400 240 100 360 Z" fill="rgba(25,30,40,.95)" stroke="rgba(100,100,120,.12)" stroke-width="1"/>
+    <!-- Stand rows lower -->
+    <path d="M102 293 Q400 173 698 293" fill="none" stroke="rgba(80,90,110,.15)" stroke-width="1"/>
+    <path d="M104 306 Q400 186 696 306" fill="none" stroke="rgba(80,90,110,.15)" stroke-width="1"/>
+    <path d="M106 319 Q400 199 694 319" fill="none" stroke="rgba(80,90,110,.12)" stroke-width="1"/>
+    <path d="M108 332 Q400 212 692 332" fill="none" stroke="rgba(80,90,110,.12)" stroke-width="1"/>
+    <path d="M110 345 Q400 225 690 345" fill="none" stroke="rgba(80,90,110,.1)" stroke-width="1"/>
+    <!-- Pitch -->
+    <ellipse cx="400" cy="500" rx="280" ry="160" fill="#1a4a1a"/>
+    <!-- Grass stripes -->
+    <ellipse cx="400" cy="500" rx="280" ry="160" fill="none" stroke="#1e5a1e" stroke-width="18" stroke-dasharray="30 30"/>
+    <!-- Pitch lines -->
+    <ellipse cx="400" cy="500" rx="272" ry="154" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+    <line x1="400" y1="346" x2="400" y2="654" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+    <ellipse cx="400" cy="500" rx="60" ry="40" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+    <circle cx="400" cy="500" r="4" fill="rgba(255,255,255,.7)"/>
+    <!-- Penalty boxes -->
+    <ellipse cx="400" cy="380" rx="90" ry="40" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>
+    <ellipse cx="400" cy="620" rx="90" ry="40" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>
+    <!-- Floodlights -->
+    <rect x="58" y="60" width="6" height="130" fill="rgba(200,200,200,.4)" rx="2"/>
+    <rect x="736" y="60" width="6" height="130" fill="rgba(200,200,200,.4)" rx="2"/>
+    <rect x="50" y="50" width="22" height="8" fill="rgba(220,220,220,.5)" rx="2"/>
+    <rect x="728" y="50" width="22" height="8" fill="rgba(220,220,220,.5)" rx="2"/>
+    <!-- Light beams -->
+    <path d="M61 58 L200 340" stroke="rgba(255,255,220,.04)" stroke-width="20"/>
+    <path d="M61 58 L350 360" stroke="rgba(255,255,220,.03)" stroke-width="15"/>
+    <path d="M739 58 L600 340" stroke="rgba(255,255,220,.04)" stroke-width="20"/>
+    <path d="M739 58 L450 360" stroke="rgba(255,255,220,.03)" stroke-width="15"/>
+    <!-- Crowd dots -->
+    <g opacity=".5">
+      <circle cx="150" cy="220" r="1.5" fill="#c8b8d0"/>
+      <circle cx="170" cy="215" r="1.5" fill="#d4c4dc"/>
+      <circle cx="190" cy="225" r="1.5" fill="#a00020"/>
+      <circle cx="210" cy="218" r="1.5" fill="#0050a0"/>
+      <circle cx="230" cy="222" r="1.5" fill="#c8b8d0"/>
+      <circle cx="250" cy="216" r="1.5" fill="#d4c4dc"/>
+      <circle cx="270" cy="224" r="1.5" fill="#a00020"/>
+      <circle cx="290" cy="219" r="1.5" fill="#c8b8d0"/>
+      <circle cx="310" cy="221" r="1.5" fill="#0050a0"/>
+      <circle cx="330" cy="217" r="1.5" fill="#d4c4dc"/>
+      <circle cx="350" cy="223" r="1.5" fill="#c8b8d0"/>
+      <circle cx="370" cy="218" r="1.5" fill="#a00020"/>
+      <circle cx="390" cy="220" r="1.5" fill="#c8b8d0"/>
+      <circle cx="410" cy="216" r="1.5" fill="#0050a0"/>
+      <circle cx="430" cy="222" r="1.5" fill="#d4c4dc"/>
+      <circle cx="450" cy="219" r="1.5" fill="#c8b8d0"/>
+      <circle cx="470" cy="221" r="1.5" fill="#a00020"/>
+      <circle cx="490" cy="217" r="1.5" fill="#c8b8d0"/>
+      <circle cx="510" cy="223" r="1.5" fill="#0050a0"/>
+      <circle cx="530" cy="218" r="1.5" fill="#d4c4dc"/>
+      <circle cx="550" cy="220" r="1.5" fill="#c8b8d0"/>
+      <circle cx="570" cy="215" r="1.5" fill="#a00020"/>
+      <circle cx="590" cy="224" r="1.5" fill="#c8b8d0"/>
+      <circle cx="610" cy="219" r="1.5" fill="#0050a0"/>
+      <circle cx="630" cy="221" r="1.5" fill="#d4c4dc"/>
+      <circle cx="650" cy="216" r="1.5" fill="#c8b8d0"/>
+    </g>
+    <!-- Bottom stands -->
+    <path d="M100 360 Q400 240 700 360 L720 430 Q400 310 80 430 Z" fill="rgba(20,24,32,.98)"/>
+  </svg>
+  <div class="bg-overlay"></div>
+  <div class="bg-lines"></div>
+</div>
+
+<!-- Content -->
 <div class="top-wrap">
-  <div class="brand">نظام تسجيل الحضور</div>
-  <div class="divider-line"></div>
+  <div class="club-name">KNIGHTS FC</div>
+  <div class="club-sub">ATTENDANCE SYSTEM</div>
+  <div class="gold-line"></div>
 </div>
 
 <div class="card">
   <!-- Head -->
   <div class="card-head">
     <div class="emblem">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <!-- Shield shape -->
-        <path d="M50 5 L90 20 L90 55 Q90 80 50 95 Q10 80 10 55 L10 20 Z" fill="#1a1a1a" stroke="#c9a84c" stroke-width="2"/>
+      <svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shield -->
+        <path d="M50 4 L92 18 L92 58 Q92 85 50 104 Q8 85 8 58 L8 18 Z" fill="rgba(12,12,12,.9)" stroke="url(#gs)" stroke-width="1.5"/>
+        <defs>
+          <linearGradient id="gs" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#b8c4cc"/>
+            <stop offset="50%" stop-color="#f5c842"/>
+            <stop offset="100%" stop-color="#b8c4cc"/>
+          </linearGradient>
+        </defs>
         <!-- Inner shield -->
-        <path d="M50 15 L82 27 L82 55 Q82 74 50 86 Q18 74 18 55 L18 27 Z" fill="none" stroke="rgba(201,168,76,.3)" stroke-width="1"/>
-        <!-- Football -->
-        <circle cx="50" cy="52" r="18" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
-        <circle cx="50" cy="52" r="5" fill="#c9a84c"/>
-        <line x1="50" y1="34" x2="50" y2="70" stroke="#c9a84c" stroke-width="1" opacity=".5"/>
-        <line x1="32" y1="52" x2="68" y2="52" stroke="#c9a84c" stroke-width="1" opacity=".5"/>
+        <path d="M50 12 L85 24 L85 58 Q85 80 50 96 Q15 80 15 58 L15 24 Z" fill="none" stroke="rgba(212,168,67,.2)" stroke-width="1"/>
+        <!-- Knight helmet simplified -->
+        <path d="M38 45 L38 35 Q38 28 50 28 Q62 28 62 35 L62 45 L65 55 L60 60 L55 58 L50 62 L45 58 L40 60 L35 55 Z" fill="rgba(212,168,67,.15)" stroke="#d4a843" stroke-width="1"/>
+        <path d="M44 42 L44 36 Q44 32 50 32 Q56 32 56 36 L56 42" fill="none" stroke="rgba(212,168,67,.5)" stroke-width="1"/>
         <!-- Stars -->
-        <text x="50" y="25" text-anchor="middle" fill="#c9a84c" font-size="8">★ ★ ★</text>
+        <text x="50" y="80" text-anchor="middle" fill="#d4a843" font-size="7" letter-spacing="3">★ ★ ★</text>
+        <!-- FC text -->
+        <text x="50" y="92" text-anchor="middle" fill="rgba(184,196,204,.6)" font-size="7" letter-spacing="2" font-weight="bold">FC</text>
       </svg>
     </div>
     <h1>تسجيل الحضور</h1>
@@ -230,6 +388,8 @@ body::after{
 
   <!-- Body -->
   <div class="card-body">
+
+    <!-- GPS Status -->
     <div class="status-strip">
       <div class="strip-item">
         <div class="strip-label">الموقع</div>
@@ -241,6 +401,7 @@ body::after{
       </div>
     </div>
 
+    <!-- Phone -->
     <div class="field">
       <label>رقم جوالك</label>
       <div class="input-wrap">
@@ -250,29 +411,40 @@ body::after{
       </div>
     </div>
 
+    <!-- Check in button -->
     <button class="btn-main" id="checkin-btn" onclick="doCheckIn()">تسجيل الحضور</button>
-    <button class="btn-refresh" onclick="getLocation()">تحديث الموقع</button>
 
     <div id="alert-box"></div>
 
-    <!-- Payment Section -->
+    <!-- Payment amount (shows after checkin) -->
     <div class="payment-section" id="payment-section">
       <div class="payment-amount" id="payment-amount">—</div>
       <div class="payment-label">المبلغ المطلوب منك</div>
-      <div class="divider"></div>
-      <div class="field">
-        <label>الصق نص الإيصال هنا</label>
-        <div class="input-wrap">
-          <textarea id="receipt-text" placeholder="الصق نص الإيصال أو رقم العملية هنا..."></textarea>
-        </div>
-      </div>
-      <button class="btn-secondary" id="btn-send" onclick="sendReceipt()">
-        📤 إرسال الإيصال للمدير
-      </button>
-      <div id="payment-alert"></div>
     </div>
+
+    <div class="divider"></div>
+
+    <!-- Receipt upload - always visible -->
+    <div class="field">
+      <label>رفع إيصال الدفع</label>
+      <label class="upload-label" for="receipt-img">
+        📸 &nbsp; اختر صورة الإيصال من الاستوديو
+        <input type="file" id="receipt-img" accept="image/*" style="display:none;" onchange="previewImg(this)">
+      </label>
+      <img id="img-preview" class="receipt-preview" alt="معاينة الإيصال">
+    </div>
+
+    <button class="btn-send" id="btn-send" onclick="sendReceipt()">
+      📤 &nbsp; إرسال الإيصال للمدير
+    </button>
+
+    <div id="payment-alert"></div>
+
+    <button class="btn-refresh" onclick="getLocation()">↻ &nbsp; تحديث الموقع</button>
+
   </div>
 
+  <!-- Footer -->
   <div class="card-foot">
     <p>جهاز واحد — رقم واحد فقط<br>لا يمكن تسجيل أكثر من شخص من نفس الجهاز</p>
     <div class="device-id" id="did-display"></div>
@@ -358,13 +530,15 @@ window.doCheckIn=async function(){
     if(!userDoc.exists()){ await setDoc(doc(db,'users',phone),{phone,deviceId:DEVICE_ID,registeredAt:new Date().toISOString()}); }
     await addDoc(collection(db,'attendance'),{phone,deviceId:DEVICE_ID,lat:pos.latitude,lng:pos.longitude,accuracy:pos.accuracy,time:new Date().toISOString()});
     checkedInPhone=phone;
+    localStorage.setItem('__last_phone__',phone);
+    localStorage.setItem('__last_checkin__',new Date().toDateString());
     alert_('alert-box','success','✅',`تم تسجيل حضورك — ${new Date().toLocaleTimeString('ar-SA')}`);
-    await showPaymentSection(phone);
+    await showPaymentAmount(phone);
   } catch(e){ alert_('alert-box','error','❌','حدث خطأ، حاول مرة أخرى'); console.error(e); }
   done(btn);
 }
 
-async function showPaymentSection(phone){
+async function showPaymentAmount(phone){
   try{
     const empDoc=await getDoc(doc(db,'employees',phone));
     if(empDoc.exists() && empDoc.data().amount>0){
@@ -374,25 +548,66 @@ async function showPaymentSection(phone){
   } catch(e){ console.error(e); }
 }
 
+// Restore on reload
+async function restoreSession(){
+  const savedPhone=localStorage.getItem('__last_phone__');
+  const savedDate=localStorage.getItem('__last_checkin__');
+  if(savedPhone && savedDate===new Date().toDateString()){
+    checkedInPhone=savedPhone;
+    document.getElementById('phone').value=savedPhone;
+    await showPaymentAmount(savedPhone);
+  }
+}
+
+window.previewImg=function(input){
+  if(!input.files[0]) return;
+  const file=input.files[0];
+  if(file.size>800000){
+    alert_('payment-alert','warn','⚠️','الصورة كبيرة — اختر صورة أصغر من 800KB');
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const preview=document.getElementById('img-preview');
+    preview.src=e.target.result;
+    preview.style.display='block';
+    document.getElementById('btn-send').classList.add('visible');
+  };
+  reader.readAsDataURL(file);
+}
+
 window.sendReceipt=async function(){
-  if(!checkedInPhone){ alert_('payment-alert','error','⚠️','سجّل حضورك أولاً'); return; }
-  const text=document.getElementById('receipt-text').value.trim();
-  if(!text){ alert_('payment-alert','warn','⚠️','الصق نص الإيصال أولاً'); return; }
+  const preview=document.getElementById('img-preview');
+  if(!preview.src||preview.style.display==='none'){
+    alert_('payment-alert','warn','⚠️','اختر صورة الإيصال أولاً');
+    return;
+  }
+  const phone=checkedInPhone||document.getElementById('phone').value.trim();
+  if(phone.length<10){ alert_('payment-alert','error','⚠️','أدخل رقم جوالك أولاً'); return; }
   const btn=document.getElementById('btn-send');
-  btn.disabled=true; btn.textContent='جاري الإرسال...';
+  btn.disabled=true; btn.innerHTML='⏳ &nbsp; جاري الإرسال...';
   try{
-    await addDoc(collection(db,'payments'),{phone:checkedInPhone,receiptText:text,status:'pending',time:new Date().toISOString()});
+    await addDoc(collection(db,'payments'),{
+      phone, receiptImg:preview.src,
+      status:'pending', time:new Date().toISOString()
+    });
     alert_('payment-alert','success','✅','تم إرسال الإيصال للمدير بنجاح');
-    document.getElementById('receipt-text').value='';
-    btn.textContent='✅ تم الإرسال';
+    preview.style.display='none';
+    btn.classList.remove('visible');
+    btn.disabled=false;
+    btn.innerHTML='📤 &nbsp; إرسال الإيصال للمدير';
+    document.getElementById('receipt-img').value='';
   } catch(e){
-    alert_('payment-alert','error','❌','فشل الإرسال، حاول مرة أخرى');
-    btn.disabled=false; btn.textContent='📤 إرسال الإيصال للمدير';
+    alert_('payment-alert','error','❌','فشل الإرسال — الصورة قد تكون كبيرة جداً');
+    btn.disabled=false;
+    btn.innerHTML='📤 &nbsp; إرسال الإيصال للمدير';
   }
 }
 
 function done(btn){ btn.disabled=false; btn.textContent='تسجيل الحضور'; }
+
 getLocation();
+restoreSession();
 </script>
 </body>
 </html>

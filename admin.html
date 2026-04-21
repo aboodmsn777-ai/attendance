@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة المدير</title>
+<title>Knights FC — لوحة المدير</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -236,8 +236,8 @@ tr:hover td{background:rgba(201,168,76,.03);}
 
 <nav class="nav">
   <div class="nav-brand">
-    <div class="nav-logo">⚽</div>
-    <span class="nav-title">لوحة المدير</span>
+    <div class="nav-logo">⚔️</div>
+    <span class="nav-title">KNIGHTS FC — المدير</span>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="live-badge"><div class="live-dot"></div>مباشر</div>
@@ -469,7 +469,7 @@ function renderPayments(){
       <td class="name-cell">${name}</td>
       <td class="phone-cell">${p.phone}</td>
       <td class="time-cell">${d.toLocaleDateString('ar-SA')} ${d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</td>
-      <td><div class="receipt-box">${p.receiptText||'—'}</div></td>
+      <td>${p.receiptImg?'<img src="'+p.receiptImg+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid rgba(201,168,76,.3);" onclick="window.open(this.src)" alt="إيصال">':(p.receiptText||'—')}</td>
       <td>${status}</td>
       <td>${actions}</td>
     </tr>`;
