@@ -249,6 +249,7 @@ tr:hover td{background:rgba(201,168,76,.03);}
   <button class="tab-btn active" id="tab-attendance-btn" onclick="switchTab('attendance')">سجلات الحضور</button>
   <button class="tab-btn" id="tab-employees-btn" onclick="switchTab('employees')">اللاعبون</button>
   <button class="tab-btn" id="tab-payments-btn" onclick="switchTab('payments')">المدفوعات <span class="badge" id="pending-badge" style="display:none;">0</span></button>
+  <button class="tab-btn" id="tab-settings-btn" onclick="switchTab('settings')">⚙️ الإعدادات</button>
 </div>
 
 <div class="page">
@@ -343,6 +344,46 @@ tr:hover td{background:rgba(201,168,76,.03);}
         </table>
       </div>
       <div id="empty-pay" class="empty-state" style="display:none;"><div class="e-ico">💳</div><p>لا توجد إيصالات بعد</p></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 4: الإعدادات ══ -->
+  <div class="tab-content" id="tab-settings">
+    <div class="add-form" style="max-width:500px;">
+      <h3>📍 تغيير موقع تسجيل الحضور</h3>
+      <div id="settings-alert" class="alert-bar"></div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
+        افتح Google Maps واضغط على الموقع المطلوب بشكل مطوّل — ستظهر الإحداثيات في الأسفل.<br>
+        انسخ الرقمين وضعهما هنا.
+      </p>
+      <div class="form-row" style="grid-template-columns:1fr 1fr 100px auto;">
+        <div class="form-group">
+          <label>خط العرض (Latitude)</label>
+          <input type="number" id="set-lat" placeholder="24.7136" step="any" id="set-lat">
+        </div>
+        <div class="form-group">
+          <label>خط الطول (Longitude)</label>
+          <input type="number" id="set-lng" placeholder="46.6753" step="any">
+        </div>
+        <div class="form-group">
+          <label>نصف القطر (م)</label>
+          <input type="number" id="set-radius" placeholder="100" min="10" max="1000">
+        </div>
+        <button class="btn-primary" id="btn-save-location">حفظ</button>
+      </div>
+
+      <!-- Current location display -->
+      <div style="margin-top:16px;padding:14px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:10px;">
+        <div style="font-size:11px;color:rgba(212,168,67,.6);font-weight:700;letter-spacing:.5px;margin-bottom:8px;">الموقع الحالي</div>
+        <div id="current-location" style="font-size:13px;color:var(--gold2);font-weight:600;">جاري التحميل...</div>
+      </div>
+
+      <!-- Map preview link -->
+      <div style="margin-top:12px;">
+        <a id="map-link" href="#" target="_blank" style="font-size:12px;color:var(--silver2);text-decoration:none;">
+          🗺️ عرض الموقع الحالي على Google Maps
+        </a>
+      </div>
     </div>
   </div>
 
@@ -553,8 +594,50 @@ document.getElementById('btn-add-emp').addEventListener('click',async()=>{
   renderEmployees(); updateStats();
 });
 
+// ─── Location Settings ───
+async function loadLocationSettings(){
+  try{
+    const locDoc=await getDoc(doc(db,'settings','location'));
+    if(locDoc.exists()){
+      const d=locDoc.data();
+      document.getElementById('set-lat').value=d.lat||'';
+      document.getElementById('set-lng').value=d.lng||'';
+      document.getElementById('set-radius').value=d.radius||100;
+      document.getElementById('current-location').textContent=
+        d.lat+', '+d.lng+' — نصف القطر: '+d.radius+' متر';
+      document.getElementById('map-link').href=
+        'https://maps.google.com/?q='+d.lat+','+d.lng;
+    } else {
+      document.getElementById('current-location').textContent='لم يتم تعيين موقع بعد';
+    }
+  } catch(e){ console.error(e); }
+}
+
+document.getElementById('btn-save-location').addEventListener('click',async()=>{
+  const lat=parseFloat(document.getElementById('set-lat').value);
+  const lng=parseFloat(document.getElementById('set-lng').value);
+  const radius=parseInt(document.getElementById('set-radius').value)||100;
+  const alertEl=document.getElementById('settings-alert');
+  if(!lat||!lng||isNaN(lat)||isNaN(lng)){
+    alertEl.textContent='أدخل إحداثيات صحيحة';
+    alertEl.className='alert-bar error show'; return;
+  }
+  try{
+    await setDoc(doc(db,'settings','location'),{lat,lng,radius,updatedAt:new Date().toISOString()});
+    document.getElementById('current-location').textContent=lat+', '+lng+' — نصف القطر: '+radius+' متر';
+    document.getElementById('map-link').href='https://maps.google.com/?q='+lat+','+lng;
+    alertEl.textContent='تم حفظ الموقع بنجاح ✅ — سيُطبَّق على صفحة اللاعبين فوراً';
+    alertEl.className='alert-bar success show';
+    setTimeout(()=>alertEl.classList.remove('show'),4000);
+  } catch(e){
+    alertEl.textContent='حدث خطأ أثناء الحفظ';
+    alertEl.className='alert-bar error show';
+  }
+});
+
 setInterval(loadData,15000);
 loadData();
+loadLocationSettings();
 </script>
 </body>
 </html>
