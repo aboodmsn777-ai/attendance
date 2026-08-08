@@ -40,20 +40,30 @@ body::after{
   background-size:44px 44px;
 }
 
-/* Trophy bg */
-.trophy-wrap{
+/* Emblem bg (steering wheel, valet themed) */
+.emblem-wrap{
   position:fixed;z-index:1;pointer-events:none;
   width:320px;height:320px;
   top:50%;left:50%;
   margin-top:-160px;margin-left:-160px;
-  opacity:.08;
+  opacity:.07;
+  color:var(--gold);
 }
-.trophy-wrap img{
+.emblem-wrap svg{
   width:100%;height:100%;
-  object-fit:contain;
   animation:spinImg 10s linear infinite;
 }
 @keyframes spinImg{0%{transform:rotateY(0deg);}100%{transform:rotateY(360deg);}}
+
+/* In-app browser warning banner */
+.webview-warn{position:relative;z-index:3;max-width:400px;width:100%;margin:0 auto 14px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);border-radius:12px;padding:14px 16px;display:none;animation:fadeDown .4s ease;}
+.webview-warn.show{display:block;}
+.webview-warn .ww-title{font-size:13px;font-weight:800;color:#dc2626;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.webview-warn .ww-text{font-size:11.5px;color:var(--ink);line-height:1.8;margin-bottom:10px;}
+.webview-warn .ww-btn{display:block;width:100%;padding:10px;border-radius:9px;border:none;background:var(--gold);color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;}
+.webview-warn .ww-btn:active{opacity:.85;}
+.gps-help{font-size:10.5px;color:var(--gray2);margin-top:6px;line-height:1.7;display:none;}
+.gps-help.show{display:block;}
 
 /* Top brand */
 .top-wrap{position:relative;z-index:2;text-align:center;margin-bottom:22px;animation:fadeDown .6s ease both;}
@@ -262,8 +272,21 @@ body::after{
 </head>
 <body>
 
-<div class="trophy-wrap">
-  <img src="trophy.png" alt="">
+<div class="emblem-wrap">
+  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="7"/>
+    <circle cx="100" cy="100" r="24" fill="none" stroke="currentColor" stroke-width="7"/>
+    <circle cx="100" cy="100" r="9" fill="currentColor"/>
+    <line x1="100" y1="16" x2="100" y2="76" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+    <line x1="30" y1="142" x2="82" y2="114" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+    <line x1="170" y1="142" x2="118" y2="114" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<div class="webview-warn" id="webview-warn">
+  <div class="ww-title">⚠️ لن يعمل تحديد الموقع هنا</div>
+  <div class="ww-text">أنت تفتح الرابط من داخل تطبيق (واتساب/انستقرام) وهذا يمنع تحديد موقعك. افتح الرابط من متصفح الجهاز مباشرة (Safari أو Chrome).</div>
+  <button class="ww-btn" onclick="window._copyLink()">📋 نسخ الرابط لفتحه في المتصفح</button>
 </div>
 
 <div class="top-wrap">
@@ -298,6 +321,7 @@ body::after{
         <div class="strip-val"><div class="pip" id="zone-pip"></div><span id="zone-txt">—</span></div>
       </div>
     </div>
+    <div class="gps-help" id="gps-help"></div>
 
     <!-- Plate input -->
     <div class="field">
@@ -463,28 +487,131 @@ async function loadZoneSettings(){
   } catch(e){ console.error(e); }
 }
 
+// كشف المتصفحات الداخلية (واتساب/انستقرام/فيسبوك/ماسنجر) اللي غالباً تمنع الموقع
+function isInAppBrowser(){
+  var ua=navigator.userAgent||'';
+  return /FBAN|FBAV|Instagram|Line\/|Messenger|WhatsApp|Twitter|TikTok/i.test(ua) ||
+         (/; wv\)/i.test(ua)); // Android WebView
+}
+
+window._copyLink=function(){
+  var url=location.href;
+  function ok(){
+    var b=document.getElementById('webview-warn');
+    var btn=b.querySelector('.ww-btn');
+    btn.textContent='✅ تم النسخ — الصقه في المتصفح';
+    setTimeout(function(){btn.textContent='📋 نسخ الرابط لفتحه في المتصفح';},2500);
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(ok).catch(function(){ fallbackCopy(url,ok); });
+  } else { fallbackCopy(url,ok); }
+}
+function fallbackCopy(text,cb){
+  try{
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    cb();
+  }catch(e){}
+}
+
+var gpsWatchdog=null, gpsRetryDone=false;
+
 window.getLocation=function(){
   var pip=document.getElementById('gps-pip'),txt=document.getElementById('gps-txt');
   var zpip=document.getElementById('zone-pip'),ztxt=document.getElementById('zone-txt');
+  var help=document.getElementById('gps-help');
   pip.className='pip loading'; txt.textContent='جاري التحديد...';
   zpip.className='pip'; ztxt.textContent='—';
-  if(!navigator.geolocation){ pip.className='pip bad'; txt.textContent='غير مدعوم'; return; }
+  help.className='gps-help'; help.textContent='';
+  gpsRetryDone=false;
+
+  if(isInAppBrowser()){
+    document.getElementById('webview-warn').classList.add('show');
+  } else {
+    document.getElementById('webview-warn').classList.remove('show');
+  }
+
+  if(!navigator.geolocation){
+    pip.className='pip bad'; txt.textContent='غير مدعوم في هذا المتصفح';
+    showHelp('help');
+    return;
+  }
+
+  function showHelp(kind){
+    help.className='gps-help show';
+    if(kind==='denied'){
+      help.innerHTML='الإذن مرفوض. لتفعيله:<br>iPhone: الإعدادات ← Safari ← الموقع ← اسمح<br>Android: إعدادات الموقع في المتصفح ← اسمح لهذا الموقع';
+    } else if(kind==='device-off'){
+      help.innerHTML='تأكد أن خدمة الموقع (GPS) مفعّلة من إعدادات جوالك، وأنك متصل بالإنترنت.';
+    } else if(kind==='timeout'){
+      help.innerHTML='التحديد استغرق وقتاً طويلاً. تأكد من تفعيل GPS واضغط "تحديث الموقع" مرة أخرى.';
+    } else {
+      help.innerHTML='إذا استمرت المشكلة، افتح الرابط من متصفح Safari أو Chrome مباشرة (وليس من داخل واتساب).';
+    }
+  }
+
+  function clearWatchdog(){ if(gpsWatchdog){ clearTimeout(gpsWatchdog); gpsWatchdog=null; } }
+
   function onSuccess(p){
+    clearWatchdog();
     pos=p.coords; pip.className='pip ok';
     txt.textContent=pos.latitude.toFixed(4)+', '+pos.longitude.toFixed(4);
     var d=dist(pos.latitude,pos.longitude,ZONE_LAT,ZONE_LNG);
     zpip.className='pip '+(d<=ZONE_RADIUS_M?'ok':'bad');
     ztxt.textContent=d<=ZONE_RADIUS_M?'داخل النطاق ✓':'خارج النطاق ✗';
+    help.className='gps-help';
   }
+
   function onError(err){
+    clearWatchdog();
     pip.className='pip bad';
-    var msgs={1:'الإذن مرفوض',2:'تعذّر التحديد',3:'انتهت المهلة'};
-    txt.textContent=msgs[err.code]||'خطأ';
+    var code=err&&err.code;
+    if(code===1){ txt.textContent='الإذن مرفوض'; showHelp('denied'); }
+    else if(code===2){ txt.textContent='تعذّر تحديد الموقع'; showHelp('device-off'); }
+    else if(code===3){ txt.textContent='انتهت المهلة'; showHelp('timeout'); }
+    else { txt.textContent='خطأ في تحديد الموقع'; showHelp(); }
   }
-  navigator.geolocation.getCurrentPosition(onSuccess,
-    function(){ navigator.geolocation.getCurrentPosition(onSuccess,onError,{enableHighAccuracy:false,timeout:15000,maximumAge:30000}); },
-    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
-  );
+
+  function attempt(opts,isRetry){
+    clearWatchdog();
+    // مؤقت احترازي: لو المتصفح ما رد إطلاقاً (يحدث بكثرة داخل متصفحات التطبيقات)
+    gpsWatchdog=setTimeout(function(){
+      if(isRetry||gpsRetryDone){
+        pip.className='pip bad'; txt.textContent='تعذّر تحديد الموقع';
+        showHelp(isInAppBrowser()?'help':'timeout');
+      } else {
+        gpsRetryDone=true;
+        attempt({enableHighAccuracy:false,timeout:15000,maximumAge:60000},true);
+      }
+    },opts.timeout+3000);
+
+    navigator.geolocation.getCurrentPosition(onSuccess,function(err){
+      if(!isRetry && !gpsRetryDone){
+        gpsRetryDone=true;
+        attempt({enableHighAccuracy:false,timeout:15000,maximumAge:60000},true);
+      } else {
+        onError(err);
+      }
+    },opts);
+  }
+
+  // تحقق من حالة الإذن مسبقاً إن أمكن لإعطاء رسالة أدق
+  if(navigator.permissions&&navigator.permissions.query){
+    navigator.permissions.query({name:'geolocation'}).then(function(res){
+      if(res.state==='denied'){
+        pip.className='pip bad'; txt.textContent='الإذن مرفوض';
+        showHelp('denied');
+        return;
+      }
+      attempt({enableHighAccuracy:true,timeout:10000,maximumAge:0},false);
+    }).catch(function(){
+      attempt({enableHighAccuracy:true,timeout:10000,maximumAge:0},false);
+    });
+  } else {
+    attempt({enableHighAccuracy:true,timeout:10000,maximumAge:0},false);
+  }
 }
 
 window.onPlateInput=async function(val){
@@ -692,7 +819,7 @@ async function checkCarReady(){
       if(Notification.permission==='granted'){
         new Notification('🚗 سيارتك جاهزة!',{
           body:'تفضل — سيارتك في انتظارك',
-          icon:'trophy.png',
+          icon:'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%23b8960c%22/%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2216%22 fill=%22none%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2250%22 y1=%228%22 x2=%2250%22 y2=%2232%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2215%22 y1=%2272%22 x2=%2240%22 y2=%2258%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2285%22 y1=%2272%22 x2=%2260%22 y2=%2258%22 stroke=%22white%22 stroke-width=%226%22/%3E%3C/svg%3E',
           vibrate:[200,100,200]
         });
       }
