@@ -22,24 +22,60 @@
 body{
   font-family:'Tajawal',sans-serif;min-height:100vh;
   display:flex;flex-direction:column;align-items:center;
-  padding:18px 14px 34px;background:#f9fafb;color:var(--ink);
+  padding:18px 14px 34px;background:#f6f3ea;color:var(--ink);
   overflow-x:hidden;position:relative;-webkit-tap-highlight-color:transparent;
 }
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+/* ═══════ الخلفية: مشربية بخيوط ذهبية + ضوء مظلة الاستقبال ═══════ */
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* 1) تدرّج القاعدة — دفء رخام الاستقبال */
+.bg-base{
   background:
-    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(184,150,12,.08) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 0% 100%, rgba(107,114,128,.05) 0%, transparent 60%);
-}
-body::after{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(184,150,12,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(184,150,12,.04) 1px,transparent 1px);
-  background-size:44px 44px;
+    radial-gradient(120% 70% at 50% -10%, #fffdf6 0%, #faf7ef 42%, #f4f1e7 100%),
+    linear-gradient(#f6f3ea,#f6f3ea);
 }
 
-.emblem-wrap{position:fixed;z-index:1;pointer-events:none;width:320px;height:320px;top:50%;left:50%;margin-top:-160px;margin-left:-160px;opacity:.06;color:var(--gold);}
-.emblem-wrap svg{width:100%;height:100%;animation:spinImg 14s linear infinite;}
-@keyframes spinImg{0%{transform:rotateY(0deg)}100%{transform:rotateY(360deg)}}
+/* 2) المشربية — نجمة ثمانية بخيط ذهبي رفيع */
+.bg-lattice{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cg fill='none' stroke='%23b8960c' stroke-width='1' stroke-linecap='square'%3E%3Crect x='22.5' y='22.5' width='45' height='45'/%3E%3Crect x='22.5' y='22.5' width='45' height='45' transform='rotate(45 45 45)'/%3E%3Cpath d='M0 0 L22.5 22.5 M90 0 L67.5 22.5 M0 90 L22.5 67.5 M90 90 L67.5 67.5'/%3E%3Cpath d='M45 0 L45 13.2 M45 90 L45 76.8 M0 45 L13.2 45 M90 45 L76.8 45'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:96px 96px;
+  opacity:.13;
+  -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.72) 38%, rgba(0,0,0,.5) 62%, rgba(0,0,0,.68) 100%);
+  mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.72) 38%, rgba(0,0,0,.5) 62%, rgba(0,0,0,.68) 100%);
+  animation:latticeDrift 46s ease-in-out infinite alternate;
+}
+@keyframes latticeDrift{
+  from{background-position:0 0;}
+  to{background-position:90px 45px;}
+}
+
+/* 3) ضوء المظلة — بركتا ضوء دافئ تتنفسان ببطء */
+.bg-glow{
+  background:
+    radial-gradient(42% 24% at 18% 8%, rgba(240,205,90,.42) 0%, transparent 72%),
+    radial-gradient(46% 28% at 86% 26%, rgba(212,170,32,.28) 0%, transparent 74%),
+    radial-gradient(60% 30% at 50% 100%, rgba(184,150,12,.26) 0%, transparent 76%),
+    radial-gradient(70% 40% at 50% 62%, rgba(255,251,236,.55) 0%, transparent 70%);
+  filter:blur(6px);
+  animation:glowBreathe 17s ease-in-out infinite alternate;
+}
+@keyframes glowBreathe{
+  from{opacity:.62;transform:translate3d(0,0,0) scale(1);}
+  to{opacity:1;transform:translate3d(0,-2.5%,0) scale(1.07);}
+}
+
+/* 4) خيط ذهبي أفقي — حافة المظلة */
+.bg-rail{
+  background:linear-gradient(180deg,transparent 0%,transparent calc(50% - 1px),rgba(184,150,12,.16) 50%,transparent calc(50% + 1px),transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 20%,#000 80%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 20%,#000 80%,transparent);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .bg-lattice,.bg-glow{animation:none;}
+}
+
+
 
 .top-wrap{position:relative;z-index:2;text-align:center;margin-bottom:18px;animation:fadeDown .5s ease both;}
 .brand-name{font-size:23px;font-weight:900;letter-spacing:5px;color:var(--gold);}
@@ -151,16 +187,10 @@ body::after{
 </head>
 <body>
 
-<div class="emblem-wrap">
-  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="7"/>
-    <circle cx="100" cy="100" r="24" fill="none" stroke="currentColor" stroke-width="7"/>
-    <circle cx="100" cy="100" r="9" fill="currentColor"/>
-    <line x1="100" y1="16" x2="100" y2="76" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-    <line x1="30" y1="142" x2="82" y2="114" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-    <line x1="170" y1="142" x2="118" y2="114" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-  </svg>
-</div>
+<div class="bg-layer bg-base"></div>
+<div class="bg-layer bg-lattice"></div>
+<div class="bg-layer bg-glow"></div>
+<div class="bg-layer bg-rail"></div>
 
 <div class="webview-warn" id="webview-warn">
   <div class="ww-title">⚠️ لن يعمل تحديد الموقع هنا</div>
@@ -368,7 +398,7 @@ document.getElementById('ww-copy').addEventListener('click',copyLink);
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
@@ -558,6 +588,34 @@ async function markArrived(auto){
   }
 }
 
+/* فحص السعة — الأرقام تبقى داخلية ولا تُعرض للضيف إطلاقاً */
+var STALE_MS=2*60*60*1000;
+async function isFull(){
+  try{
+    var max=10;
+    var c=await getDoc(doc(db,'settings','capacity'));
+    if(c.exists()){
+      var m=Number(c.data().max);
+      if(!isNaN(m)&&m>0) max=m;
+    }
+    var snap=await getDocs(collection(db,'visits'));
+    var occ=0;
+    snap.docs.forEach(function(d){
+      var v=d.data();
+      if(v.__diagnostic) return;
+      if(v.status==='completed') return;
+      if(v.status==='registered'){
+        var t=0; try{ t=new Date(v.createdAt).getTime(); }catch(e){}
+        if(t && (Date.now()-t)>STALE_MS) return;
+      }
+      occ++;
+    });
+    return occ>=max;
+  }catch(e){
+    return false; // عند تعذّر الفحص لا نمنع الضيف
+  }
+}
+
 document.getElementById('btn-register').addEventListener('click',async function(){
   var plate=document.getElementById('plate').value.trim().toUpperCase();
   var phone=document.getElementById('guest-phone').value.trim();
@@ -566,6 +624,11 @@ document.getElementById('btn-register').addEventListener('click',async function(
   if(!/^05[0-9]{8}$/.test(phone)){ alertBox('reg-alert','warn','⚠️','أدخل رقم جوال صحيح يبدأ بـ 05'); return; }
   btn.disabled=true; btn.innerHTML='<div class="spin"></div>';
   try{
+    if(await isFull()){
+      alertBox('reg-alert','warn','🙏','نعتذر منكم — الخدمة غير متاحة حالياً. يرجى مراجعة موظف الاستقبال.');
+      btn.disabled=false; btn.textContent='تسجيل بياناتي';
+      return;
+    }
     var ref=await addDoc(collection(db,'visits'),{
       plate:plate, phone:phone, deviceId:DEVICE_ID,
       status:S.REGISTERED, createdAt:new Date().toISOString()

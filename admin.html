@@ -21,13 +21,58 @@
   --border:rgba(184,150,12,.2);
   --green:#059669;--red:#dc2626;--blue:#2563eb;--amber:#d97706;
 }
-body{font-family:'Tajawal',sans-serif;background:#f9fafb;min-height:100vh;color:var(--ink);-webkit-tap-highlight-color:transparent;padding-bottom:30px;}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 40% at 50% 0%, rgba(184,150,12,.09) 0%, transparent 60%);}
-body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(184,150,12,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(184,150,12,.03) 1px,transparent 1px);background-size:44px 44px;}
+body{font-family:'Tajawal',sans-serif;background:#f6f3ea;min-height:100vh;color:var(--ink);-webkit-tap-highlight-color:transparent;padding-bottom:30px;}
+/* ═══════ الخلفية: مشربية بخيوط ذهبية + ضوء مظلة الاستقبال ═══════ */
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
-.emblem-wrap{position:fixed;z-index:1;pointer-events:none;width:320px;height:320px;top:50%;left:50%;margin-top:-160px;margin-left:-160px;opacity:.05;color:var(--gold);}
-.emblem-wrap svg{width:100%;height:100%;animation:spinImg 14s linear infinite;}
-@keyframes spinImg{0%{transform:rotateY(0deg)}100%{transform:rotateY(360deg)}}
+/* 1) تدرّج القاعدة — دفء رخام الاستقبال */
+.bg-base{
+  background:
+    radial-gradient(120% 70% at 50% -10%, #fffdf6 0%, #faf7ef 42%, #f4f1e7 100%),
+    linear-gradient(#f6f3ea,#f6f3ea);
+}
+
+/* 2) المشربية — نجمة ثمانية بخيط ذهبي رفيع */
+.bg-lattice{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cg fill='none' stroke='%23b8960c' stroke-width='1' stroke-linecap='square'%3E%3Crect x='22.5' y='22.5' width='45' height='45'/%3E%3Crect x='22.5' y='22.5' width='45' height='45' transform='rotate(45 45 45)'/%3E%3Cpath d='M0 0 L22.5 22.5 M90 0 L67.5 22.5 M0 90 L22.5 67.5 M90 90 L67.5 67.5'/%3E%3Cpath d='M45 0 L45 13.2 M45 90 L45 76.8 M0 45 L13.2 45 M90 45 L76.8 45'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:96px 96px;
+  opacity:.13;
+  -webkit-mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.72) 38%, rgba(0,0,0,.5) 62%, rgba(0,0,0,.68) 100%);
+  mask-image:linear-gradient(180deg, #000 0%, rgba(0,0,0,.72) 38%, rgba(0,0,0,.5) 62%, rgba(0,0,0,.68) 100%);
+  animation:latticeDrift 46s ease-in-out infinite alternate;
+}
+@keyframes latticeDrift{
+  from{background-position:0 0;}
+  to{background-position:90px 45px;}
+}
+
+/* 3) ضوء المظلة — بركتا ضوء دافئ تتنفسان ببطء */
+.bg-glow{
+  background:
+    radial-gradient(42% 24% at 18% 8%, rgba(240,205,90,.42) 0%, transparent 72%),
+    radial-gradient(46% 28% at 86% 26%, rgba(212,170,32,.28) 0%, transparent 74%),
+    radial-gradient(60% 30% at 50% 100%, rgba(184,150,12,.26) 0%, transparent 76%),
+    radial-gradient(70% 40% at 50% 62%, rgba(255,251,236,.55) 0%, transparent 70%);
+  filter:blur(6px);
+  animation:glowBreathe 17s ease-in-out infinite alternate;
+}
+@keyframes glowBreathe{
+  from{opacity:.62;transform:translate3d(0,0,0) scale(1);}
+  to{opacity:1;transform:translate3d(0,-2.5%,0) scale(1.07);}
+}
+
+/* 4) خيط ذهبي أفقي — حافة المظلة */
+.bg-rail{
+  background:linear-gradient(180deg,transparent 0%,transparent calc(50% - 1px),rgba(184,150,12,.16) 50%,transparent calc(50% + 1px),transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 20%,#000 80%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 20%,#000 80%,transparent);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .bg-lattice,.bg-glow{animation:none;}
+}
+
+
 
 .nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:58px;}
 .nav-brand{display:flex;align-items:center;gap:9px;}
@@ -163,16 +208,10 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
 </head>
 <body>
 
-<div class="emblem-wrap">
-  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="7"/>
-    <circle cx="100" cy="100" r="24" fill="none" stroke="currentColor" stroke-width="7"/>
-    <circle cx="100" cy="100" r="9" fill="currentColor"/>
-    <line x1="100" y1="16" x2="100" y2="76" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-    <line x1="30" y1="142" x2="82" y2="114" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-    <line x1="170" y1="142" x2="118" y2="114" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-  </svg>
-</div>
+<div class="bg-layer bg-base"></div>
+<div class="bg-layer bg-lattice"></div>
+<div class="bg-layer bg-glow"></div>
+<div class="bg-layer bg-rail"></div>
 
 <div class="nav">
   <div class="nav-brand">
@@ -239,6 +278,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
     <div class="stat info"><div class="stat-num" id="s-arrivals">0</div><div class="stat-lbl">وصول بانتظار الاستلام</div></div>
     <div class="stat"><div class="stat-num" id="s-parked">0</div><div class="stat-lbl">سيارات في العهدة</div></div>
     <div class="stat urgent"><div class="stat-num" id="s-departures">0</div><div class="stat-lbl">طلبات مغادرة</div></div>
+    <div class="stat" id="stat-occupancy"><div class="stat-num" id="s-occupancy">0/10</div><div class="stat-lbl">الإشغال</div></div>
     <div class="stat"><div class="stat-num" id="s-today">0</div><div class="stat-lbl">إجمالي اليوم</div></div>
   </div>
 
@@ -272,6 +312,17 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
       <div class="alert-bar" id="loc-alert"></div>
       <div class="hint" id="loc-current">—</div>
       <div class="hint">وصول الضيف يُرصد تلقائياً بمجرد دخوله هذا النطاق.</div>
+    </div>
+    <div class="panel">
+      <h3>🚗 سعة المواقف</h3>
+      <div class="field">
+        <label>الحد الأقصى لعدد الضيوف</label>
+        <input type="text" id="set-capacity" inputmode="numeric" placeholder="10">
+      </div>
+      <button class="btn-primary" id="btn-save-capacity" style="width:100%;">حفظ السعة</button>
+      <div class="alert-bar" id="cap-alert"></div>
+      <div class="hint" id="cap-current">—</div>
+      <div class="hint">عند الامتلاء يُمنع تسجيل ضيوف جدد تلقائياً. الضيف يرى رسالة اعتذار مهذبة فقط — لا يرى العدد ولا السعة.</div>
     </div>
     <div class="panel">
       <h3>🔊 التنبيهات</h3>
@@ -547,10 +598,32 @@ async function loadData(){
 
 function byStatus(s){ return visits.filter(function(v){ return v.status===s; }); }
 
+var MAX_GUESTS=10;
+var STALE_MS=2*60*60*1000; // تسجيل قديم لم يصل خلال ساعتين لا يشغل مكاناً
+
+function isOccupying(v){
+  if(v.status===S.COMPLETED) return false;
+  if(v.status===S.REGISTERED){
+    var t=0; try{ t=new Date(v.createdAt).getTime(); }catch(e){}
+    if(t && (Date.now()-t)>STALE_MS) return false;
+  }
+  return true;
+}
+function occupancyCount(){ return visits.filter(isOccupying).length; }
+
+
 function updateStats(){
   document.getElementById('s-arrivals').textContent=byStatus(S.ARRIVED).length;
   document.getElementById('s-parked').textContent=byStatus(S.PARKED).length;
   document.getElementById('s-departures').textContent=byStatus(S.DEP_REQ).length;
+
+  var occ=occupancyCount();
+  var el=document.getElementById('s-occupancy');
+  el.textContent=occ+'/'+MAX_GUESTS;
+  var card=document.getElementById('stat-occupancy');
+  card.classList.remove('urgent','info');
+  if(occ>=MAX_GUESTS) card.classList.add('urgent');
+  else if(occ>=MAX_GUESTS-2) card.classList.add('info');
   var today=new Date().toDateString();
   document.getElementById('s-today').textContent=visits.filter(function(v){
     try{ return new Date(v.createdAt).toDateString()===today; }catch(e){ return false; }
@@ -937,6 +1010,47 @@ on('map-confirm','click',function(){
   locMsg('success','تم اختيار الموقع من الخريطة — اضغط حفظ لتثبيته');
 });
 
+async function loadCapacity(){
+  try{
+    var d=await getDoc(doc(db,'settings','capacity'));
+    if(d.exists()){
+      var m=Number(d.data().max);
+      if(!isNaN(m)&&m>0) MAX_GUESTS=m;
+    }
+  }catch(e){}
+  document.getElementById('set-capacity').value=MAX_GUESTS;
+  document.getElementById('cap-current').textContent='السعة الحالية: '+MAX_GUESTS+' ضيف';
+  try{ updateStats(); }catch(e){}
+}
+
+on('btn-save-capacity','click',async function(){
+  var el=document.getElementById('cap-alert');
+  var n=parseSingle(document.getElementById('set-capacity').value);
+  if(isNaN(n)||n<1){ el.textContent='أدخل رقماً صحيحاً (1 فأكثر)'; el.className='alert-bar error show'; return; }
+  n=Math.floor(n);
+  var btn=this; btn.disabled=true; var old=btn.textContent; btn.textContent='⏳ جاري الحفظ...';
+  try{
+    await setDoc(doc(db,'settings','capacity'),{max:n,updatedAt:new Date().toISOString()});
+    var back=await getDoc(doc(db,'settings','capacity'));
+    if(!back.exists()||Number(back.data().max)!==n){
+      el.textContent='لم يتم تأكيد الحفظ — حاول مرة أخرى'; el.className='alert-bar error show';
+    } else {
+      MAX_GUESTS=n;
+      document.getElementById('cap-current').textContent='السعة الحالية: '+MAX_GUESTS+' ضيف';
+      el.textContent='تم حفظ السعة بنجاح ✅'; el.className='alert-bar success show';
+      updateStats();
+      setTimeout(function(){ el.classList.remove('show'); },4000);
+    }
+  }catch(e){
+    var code=(e&&e.code)||'';
+    el.textContent=String(code).indexOf('permission-denied')>-1
+      ? 'الحفظ مرفوض من قواعد أمان Firestore'
+      : 'تعذّر الحفظ'+(code?' ('+code+')':'');
+    el.className='alert-bar error show';
+  }
+  btn.disabled=false; btn.textContent=old;
+});
+
 on('btn-save-location','click',async function(){
   var btn=this;
   var latRaw=document.getElementById('set-lat').value;
@@ -1104,6 +1218,7 @@ if('Notification' in window && Notification.permission==='default'){
 
 loadData();
 loadLocationSettings();
+loadCapacity();
 setInterval(loadData,5000);
 
 window.__valetAdmin={ get visits(){return visits;}, loadData:loadData, S:S };
