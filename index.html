@@ -235,13 +235,13 @@ body::after{
   </div>
 </div>
 
-<div class="modal-mask" id="ready-modal">
+<div class="modal-mask" id="ack-modal">
   <div class="modal-box">
-    <span class="modal-ico">🚗</span>
-    <div class="modal-title">سيارتك جاهزة!</div>
-    <div class="modal-text">تم تجهيز سيارتك وهي بانتظارك عند نقطة الاستلام</div>
-    <div class="modal-plate" id="ready-plate">—</div>
-    <button class="modal-btn" id="btn-guest-ack">تم — استلمت الرسالة</button>
+    <span class="modal-ico" id="ack-ico">🚗</span>
+    <div class="modal-title" id="ack-title">—</div>
+    <div class="modal-text" id="ack-text">—</div>
+    <div class="modal-plate" id="ack-plate">—</div>
+    <button class="modal-btn" id="btn-ack">تم — استلمت الرسالة</button>
   </div>
 </div>
 
@@ -605,20 +605,6 @@ document.getElementById('btn-depart').addEventListener('click',async function(){
   }
 });
 
-document.getElementById('btn-guest-ack').addEventListener('click',async function(){
-  var btn=this; btn.disabled=true;
-  stopRing();
-  try{
-    await updateDoc(doc(db,'visits',visitId),{ status:S.GUEST_ACK, guestAckAt:new Date().toISOString() });
-    document.getElementById('ready-modal').classList.remove('open');
-    await refresh();
-    alertBox('visit-alert','info','👍','شكراً لك — الموظف بانتظارك عند نقطة الاستلام');
-  }catch(e){
-    alertBox('visit-alert','error','❌','تعذّر التأكيد، حاول مرة أخرى');
-  }
-  btn.disabled=false;
-});
-
 document.getElementById('btn-manual-arrive').addEventListener('click',async function(){
   if(!visit) return;
   if(visit.status!==S.REGISTERED){ alertBox('visit-alert','info','ℹ️','وصولك مسجّل مسبقاً'); return; }
@@ -630,7 +616,7 @@ document.getElementById('btn-reset').addEventListener('click',function(){
   localStorage.removeItem('__visit__');
   localStorage.removeItem('__seen_status__');
   visitId=null; visit=null; lastSeenStatus=null; autoArriveSent=false;
-  document.getElementById('ready-modal').classList.remove('open');
+  document.getElementById('ack-modal').classList.remove('open');
   clearAlert('visit-alert');
   render();
 });
@@ -704,51 +690,110 @@ function render(){
   document.getElementById('head-sub').textContent=sub[visit.status]||'';
 }
 
-var __readyNotifyAt=0;
-function showReadyAlert(){
-  document.getElementById('ready-plate').textContent=visit.plate||'—';
-  document.getElementById('ready-modal').classList.add('open');
-  document.getElementById('btn-guest-ack').disabled=false;
+/* ═══════ محرك التنبيه المستمر لكل خطوة ═══════
+   لكل خطوة تنبيه يستمر (رنين + إشعار متكرر + نافذة) حتى يضغط الضيف "تم". */
+var ACK_STEPS={};
+ACK_STEPS[S.PARKED]={
+  field:'guestAckParked', ico:'✅',
+  title:'تم استلام سيارتك',
+  text:'استلم الموظف سيارتك وهي الآن في عهدتنا بأمان',
+  notifTitle:'✅ تم استلام سيارتك'
+};
+ACK_STEPS[S.BRINGING]={
+  field:'guestAckBringing', ico:'🚗',
+  title:'جاري إحضار سيارتك',
+  text:'الموظف في طريقه لإحضار سيارتك — يرجى الانتظار قليلاً',
+  notifTitle:'🚗 جاري إحضار سيارتك'
+};
+ACK_STEPS[S.READY]={
+  field:null, ico:'🚗',
+  title:'سيارتك جاهزة!',
+  text:'تم تجهيز سيارتك وهي بانتظارك عند نقطة الاستلام',
+  notifTitle:'🚗 سيارتك جاهزة!'
+};
+
+/* الخطوة التي تنتظر تأكيد الضيف الآن (أو null) */
+function pendingAckStep(){
+  if(!visit) return null;
+  var cfg=ACK_STEPS[visit.status];
+  if(!cfg) return null;
+  if(cfg.field && visit[cfg.field]===true) return null; // أكّدها مسبقاً
+  return cfg;
+}
+
+var __ackNotifyAt=0, __ackNotifyKey='';
+function showAckAlert(cfg){
+  document.getElementById('ack-ico').textContent=cfg.ico;
+  document.getElementById('ack-title').textContent=cfg.title;
+  document.getElementById('ack-text').textContent=cfg.text;
+  document.getElementById('ack-plate').textContent=visit.plate||'—';
+  document.getElementById('ack-modal').classList.add('open');
+  document.getElementById('btn-ack').disabled=false;
+
   startRing();
-  startTitleFlash('🚗 سيارتك جاهزة!');
-  // إعادة الإشعار كل 20 ثانية حتى يضغط الضيف "تم"
+  startTitleFlash(cfg.title);
+
+  var key=visit.id+'-'+visit.status;
   var now=Date.now();
-  if(now-__readyNotifyAt>=20000){
-    __readyNotifyAt=now;
-    notify('🚗 سيارتك جاهزة!','سيارتك '+visit.plate+' بانتظارك عند نقطة الاستلام','ready-'+visit.id);
+  if(key!==__ackNotifyKey || now-__ackNotifyAt>=20000){
+    __ackNotifyKey=key; __ackNotifyAt=now;
+    notify(cfg.notifTitle, cfg.text+' — '+(visit.plate||''), 'step-'+key);
   }
 }
+function hideAckAlert(){
+  document.getElementById('ack-modal').classList.remove('open');
+  stopRing(); stopTitleFlash();
+}
+
+/* تأكيد الضيف للخطوة الحالية */
+document.getElementById('btn-ack').addEventListener('click',async function(){
+  var cfg=pendingAckStep();
+  if(!cfg||!visit) return;
+  var btn=this; btn.disabled=true;
+  stopRing(); stopTitleFlash();
+  try{
+    if(visit.status===S.READY){
+      await updateDoc(doc(db,'visits',visitId),{status:S.GUEST_ACK,guestAckAt:new Date().toISOString()});
+    } else {
+      var payload={};
+      payload[cfg.field]=true;
+      payload[cfg.field+'At']=new Date().toISOString();
+      await updateDoc(doc(db,'visits',visitId),payload);
+    }
+    document.getElementById('ack-modal').classList.remove('open');
+    await refresh();
+  }catch(e){
+    btn.disabled=false;
+    alertBox('visit-alert','error','❌','تعذّر التأكيد — حاول مرة أخرى');
+  }
+});
 
 function reactToStatus(){
   if(!visit) return;
   var s=visit.status;
-  if(s===lastSeenStatus){
-    if(s===S.READY) showReadyAlert();   // التنبيه يستمر ولا يتوقف حتى التأكيد
-    return;
-  }
+
+  // 1) تنبيه مستمر لأي خطوة تنتظر تأكيد الضيف
+  var cfg=pendingAckStep();
+  if(cfg){ showAckAlert(cfg); }
+  else { hideAckAlert(); }
+
+  // 2) رسائل الحالة (مرة واحدة عند تغيّر الحالة)
+  if(s===lastSeenStatus) return;
   lastSeenStatus=s;
   localStorage.setItem('__seen_status__',s);
 
   if(s===S.PARKED){
-    stopRing(); stopTitleFlash(); chime();
-    notify('✅ تم استلام سيارتك','سيارتك '+visit.plate+' في عهدة الفاليت');
     alertBox('visit-alert','success','✅','استلم الموظف سيارتك — في أمان');
+  } else if(s===S.DEP_REQ){
+    alertBox('visit-alert','success','🔔','تم إرسال طلبكم — سيتم إحضار سيارتكم فوراً');
   } else if(s===S.BRINGING){
-    stopRing(); stopTitleFlash(); chime();
-    notify('🚗 جاري إحضار سيارتك','الموظف في طريقه لإحضار سيارتك '+visit.plate);
     alertBox('visit-alert','info','🚗','جاري إحضار سيارتك — يرجى الانتظار قليلاً');
-  } else if(s===S.READY){
-    showReadyAlert();
   } else if(s===S.GUEST_ACK){
-    stopRing(); stopTitleFlash();
-    document.getElementById('ready-modal').classList.remove('open');
+    alertBox('visit-alert','info','👍','شكراً لك — الموظف بانتظارك عند نقطة الاستلام');
   } else if(s===S.COMPLETED){
-    stopRing(); stopTitleFlash(); chime();
-    document.getElementById('ready-modal').classList.remove('open');
-    notify('🎉 رحلة موفقة','تم تسليم سيارتك بنجاح — نتشرف بخدمتكم دائماً');
+    chime();
+    notify('🎉 رحلة موفقة','تم تسليم سيارتك بنجاح — نتشرف بخدمتكم دائماً','done-'+visit.id);
     alertBox('visit-alert','success','🎉','تم تسليم سيارتك — نتشرف بخدمتكم دائماً');
-  } else {
-    stopRing(); stopTitleFlash();
   }
 }
 
@@ -760,7 +805,7 @@ async function refresh(){
       // حُذفت بيانات الضيف بعد إتمام الخدمة
       var wasFinished = (lastSeenStatus===S.COMPLETED||lastSeenStatus===S.GUEST_ACK||lastSeenStatus===S.READY);
       stopRing(); stopTitleFlash();
-      document.getElementById('ready-modal').classList.remove('open');
+      document.getElementById('ack-modal').classList.remove('open');
       localStorage.removeItem('__visit__');
       localStorage.removeItem('__seen_status__');
       visitId=null; visit=null; lastSeenStatus=null; autoArriveSent=false;
@@ -778,7 +823,7 @@ async function refresh(){
 
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible'){
-    if(visit&&visit.status===S.READY){ stopRing(); startRing(); }
+    if(pendingAckStep()){ stopRing(); startRing(); }
     refresh();
   }
 });

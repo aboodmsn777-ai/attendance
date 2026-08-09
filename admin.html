@@ -199,6 +199,21 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
   </div>
 </div>
 
+<!-- Handover alert: guest confirmed and is coming -->
+<div class="alert-banner arrival" id="banner-handover" style="border-color:rgba(5,150,105,.45);background:linear-gradient(135deg,rgba(5,150,105,.14),rgba(5,150,105,.06));">
+  <div class="ab-inner">
+    <span class="ab-ico">🤝</span>
+    <div class="ab-text">
+      <div class="ab-title" style="color:#047857;">الضيف قادم لاستلام سيارته</div>
+      <div class="ab-plate" id="hnd-plate">—</div>
+      <div class="ab-phone" id="hnd-phone">—</div>
+      <div class="ab-time" id="hnd-time">—</div>
+    </div>
+    <button class="ab-btn" id="btn-ack-handover" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 5px 14px rgba(5,150,105,.3);">✓ تأكيد التسليم والمغادرة</button>
+    <div class="ab-more hidden" id="hnd-more"></div>
+  </div>
+</div>
+
 <!-- Arrival alert -->
 <div class="alert-banner arrival" id="banner-arrival">
   <div class="ab-inner">
@@ -553,11 +568,12 @@ function cardHtml(v){
   if(v.status===S.ARRIVED){
     actions='<button class="act blue" onclick="vAckArrival(\''+v.id+'\')">✓ تم الاستلام</button>';
   } else if(v.status===S.PARKED){
-    actions='<div class="waiting-note">🅿️ في العهدة — بانتظار طلب المغادرة من الضيف</div>';
+    actions='<div class="waiting-note">'+(v.guestAckParked?'🅿️ في العهدة — الضيف أكّد الاستلام':'⏳ في العهدة — بانتظار تأكيد الضيف للإشعار')+'</div>';
   } else if(v.status===S.DEP_REQ){
     actions='<button class="act red" onclick="vAckDeparture(\''+v.id+'\')">✓ جاري إحضار السيارة</button>';
   } else if(v.status===S.BRINGING){
-    actions='<button class="act amber" onclick="vCarReady(\''+v.id+'\')">🚗 تم تجهيز السيارة</button>';
+    actions=(v.guestAckBringing?'':'<div class="waiting-note">⏳ بانتظار تأكيد الضيف لإشعار الإحضار</div>')
+      +'<button class="act amber" onclick="vCarReady(\''+v.id+'\')">🚗 تم تجهيز السيارة</button>';
   } else if(v.status===S.READY){
     actions='<div class="waiting-note">⏳ بانتظار تأكيد الضيف لاستلام الرسالة...</div>'
       +'<div class="vc-actions"><button class="act green" onclick="vComplete(\''+v.id+'\')">✓ تأكيد التسليم والمغادرة</button></div>';
@@ -643,6 +659,8 @@ function notifyPersistent(v,kind){
   __notifyRepeatAt[v.id]=now;
   if(kind==='departure'){
     notify('🔔 طلب مغادرة — '+(v.plate||''),'الجوال: '+(v.phone||'—')+' — الضيف ينتظر سيارته','dep-'+v.id);
+  } else if(kind==='handover'){
+    notify('🤝 الضيف قادم للاستلام — '+(v.plate||''),'الجوال: '+(v.phone||'—')+' — أكّد التسليم بعد تسليم السيارة','hnd-'+v.id);
   } else {
     notify('🚙 وصول ضيف — '+(v.plate||''),'الجوال: '+(v.phone||'—')+' — بانتظار استلام السيارة','arr-'+v.id);
   }
@@ -651,10 +669,12 @@ function notifyPersistent(v,kind){
 function checkAlerts(){
   var departures=byStatus(S.DEP_REQ);
   var arrivals=byStatus(S.ARRIVED);
+  var handovers=byStatus(S.GUEST_ACK);
 
   // الإشعار يتكرر باستمرار حتى يضغط الموظف
   departures.forEach(function(v){ seenDepartures[v.id]=true; notifyPersistent(v,'departure'); });
   arrivals.forEach(function(v){ seenArrivals[v.id]=true; notifyPersistent(v,'arrival'); });
+  handovers.forEach(function(v){ notifyPersistent(v,'handover'); });
 
   var depBanner=document.getElementById('banner-departure');
   var arrBanner=document.getElementById('banner-arrival');
@@ -687,10 +707,25 @@ function checkAlerts(){
     arrBanner.classList.remove('show');
   }
 
-  // الرنين المتواصل لأي طلب معلّق (مغادرة أو وصول) — لا يتوقف إلا بضغط الموظف
-  if(departures.length||arrivals.length){
+  var hb=document.getElementById('banner-handover');
+  if(handovers.length){
+    var h=handovers[0];
+    document.getElementById('hnd-plate').textContent=h.plate||'—';
+    document.getElementById('hnd-phone').textContent=h.phone||'—';
+    document.getElementById('hnd-time').textContent='أكّد الضيف: '+fmtTime(h.guestAckAt);
+    document.getElementById('btn-ack-handover').setAttribute('data-id',h.id);
+    var hm=document.getElementById('hnd-more');
+    if(handovers.length>1){ hm.textContent='+ '+(handovers.length-1)+' ضيف آخر بانتظار التسليم'; hm.classList.remove('hidden'); }
+    else hm.classList.add('hidden');
+    hb.classList.add('show');
+  } else {
+    hb.classList.remove('show');
+  }
+
+  // الرنين المتواصل لأي خطوة تنتظر تأكيد الموظف — لا يتوقف إلا بضغطه
+  if(departures.length||arrivals.length||handovers.length){
     startRing();
-    startTitleFlash(departures.length ? '🔔 طلب مغادرة!' : '🚙 وصول ضيف!');
+    startTitleFlash(departures.length ? '🔔 طلب مغادرة!' : (handovers.length ? '🤝 سلّم السيارة!' : '🚙 وصول ضيف!'));
   } else {
     stopRing();
     stopTitleFlash();
@@ -700,7 +735,7 @@ function checkAlerts(){
 /* عند العودة للصفحة: أعد تشغيل الرنين فوراً إن بقي طلب معلّق (المتصفح يخنق المؤقتات في الخلفية) */
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible'){
-    if(byStatus(S.DEP_REQ).length||byStatus(S.ARRIVED).length){
+    if(byStatus(S.DEP_REQ).length||byStatus(S.ARRIVED).length||byStatus(S.GUEST_ACK).length){
       stopRing(); startRing();
     }
     loadData();
@@ -712,6 +747,9 @@ document.getElementById('btn-ack-departure').addEventListener('click',function()
 });
 document.getElementById('btn-ack-arrival').addEventListener('click',function(){
   var id=this.getAttribute('data-id'); if(id) window.vAckArrival(id);
+});
+document.getElementById('btn-ack-handover').addEventListener('click',function(){
+  var id=this.getAttribute('data-id'); if(id){ stopRing(); window.vComplete(id); }
 });
 
 /* ═══════ الإعدادات ═══════ */
