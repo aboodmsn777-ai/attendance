@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#b8960c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="فاليت">
 <title>Valet Parking — استقبال الضيوف</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -364,7 +368,7 @@ document.getElementById('ww-copy').addEventListener('click',copyLink);
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, addDoc, updateDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
@@ -794,7 +798,24 @@ function reactToStatus(){
     chime();
     notify('🎉 رحلة موفقة','تم تسليم سيارتك بنجاح — نتشرف بخدمتكم دائماً','done-'+visit.id);
     alertBox('visit-alert','success','🎉','تم تسليم سيارتك — نتشرف بخدمتكم دائماً');
+    scheduleSelfWipe(visit.id);
   }
+}
+
+/* حذف احتياطي من جهة الضيف: يضمن مسح البيانات حتى لو أُغلقت صفحة الموظف */
+var __selfWipeTimer=null;
+function scheduleSelfWipe(id){
+  if(__selfWipeTimer) return;
+  __selfWipeTimer=setTimeout(async function(){
+    __selfWipeTimer=null;
+    try{ await deleteDoc(doc(db,'visits',id)); }catch(e){}
+    localStorage.removeItem('__visit__');
+    localStorage.removeItem('__seen_status__');
+    visitId=null; visit=null; lastSeenStatus=null; autoArriveSent=false;
+    stopRing(); stopTitleFlash();
+    render();
+    alertBox('reg-alert','success','🎉','تم إتمام الخدمة وحُذفت بياناتك — نتشرف بخدمتكم دائماً');
+  },5200);
 }
 
 async function refresh(){

@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#b8960c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="فاليت — الموظف">
 <title>Valet Parking — موظف الاستقبال</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -272,7 +276,13 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
     <div class="panel">
       <h3>🔊 التنبيهات</h3>
       <button class="btn-primary" id="btn-test-sound">🔔 اختبار الصوت</button>
-      <div class="hint">اضغط الزر مرة واحدة بعد فتح الصفحة لتفعيل صوت التنبيهات في هذا المتصفح.</div>
+      <button class="btn-primary" id="btn-enable-notif" style="margin-right:8px;">🔔 تفعيل الإشعارات</button>
+      <div class="hint" id="notif-state">—</div>
+    </div>
+    <div class="panel">
+      <h3>🩺 فحص النظام</h3>
+      <button class="btn-primary" id="btn-diagnose" style="width:100%;">تشغيل الفحص الكامل</button>
+      <div id="diag-out" style="margin-top:12px;font-size:12px;line-height:2;"></div>
     </div>
     <div class="panel">
       <h3>🗑 إدارة البيانات</h3>
@@ -409,7 +419,7 @@ on('btn-test-sound','click',function(){ unlockAudio(); setTimeout(ringOnce,120);
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, setDoc, addDoc, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhz3ak31RfexMaN_HwwQBxUFgiYwgNXEM",
@@ -520,11 +530,11 @@ function purgeOldCompleted(){
 async function loadData(){
   try{
     var snap=await getDocs(query(collection(db,'visits'),orderBy('createdAt','desc')));
-    visits=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    visits=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); }).filter(function(v){ return !v.__diagnostic; });
   }catch(e){
     try{
       var snap2=await getDocs(collection(db,'visits'));
-      visits=snap2.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      visits=snap2.docs.map(function(d){ return Object.assign({id:d.id},d.data()); }).filter(function(v){ return !v.__diagnostic; });
       visits.sort(function(a,b){ return String(b.createdAt||'').localeCompare(String(a.createdAt||'')); });
     }catch(e2){ console.error(e2); return; }
   }
@@ -988,6 +998,103 @@ on('btn-clear-completed','click',async function(){
     el.textContent='تعذّر الحذف، حاول مرة أخرى'; el.className='alert-bar error show';
   }
 });
+
+/* ═══════ فحص النظام: يخبرك بالسبب الحقيقي لأي عطل ═══════ */
+function diagLine(ok,label,detail){
+  var color = ok===true ? '#047857' : (ok===false ? '#b91c1c' : '#b45309');
+  var ico   = ok===true ? '✅' : (ok===false ? '❌' : '⚠️');
+  return '<div style="color:'+color+';font-weight:700;">'+ico+' '+label+
+         (detail?'<div style="font-size:10.5px;color:#6b7280;font-weight:600;margin-right:20px;line-height:1.7;">'+detail+'</div>':'')+'</div>';
+}
+
+function notifStateText(){
+  if(!('Notification' in window)){
+    var ua=navigator.userAgent||'';
+    if(/iPad|iPhone|iPod/.test(ua)){
+      return {ok:false,txt:'الإشعارات غير مدعومة في متصفح iPhone العادي',
+        hint:'على الآيفون: اضغط زر المشاركة في Safari ← «إضافة إلى الشاشة الرئيسية» ← افتح التطبيق من الأيقونة، عندها تعمل الإشعارات. الرنين والاهتزاز يعملان في الحالتين.'};
+    }
+    return {ok:false,txt:'هذا المتصفح لا يدعم الإشعارات',hint:'استخدم Chrome أو Safari حديث.'};
+  }
+  if(Notification.permission==='granted') return {ok:true,txt:'الإشعارات مفعّلة',hint:''};
+  if(Notification.permission==='denied') return {ok:false,txt:'الإشعارات مرفوضة',
+    hint:'فعّلها من إعدادات المتصفح لهذا الموقع ثم أعد تحميل الصفحة.'};
+  return {ok:null,txt:'الإشعارات لم تُفعّل بعد',hint:'اضغط زر «تفعيل الإشعارات» أعلاه.'};
+}
+
+function refreshNotifState(){
+  var st=notifStateText();
+  var el=document.getElementById('notif-state');
+  if(el) el.innerHTML=st.txt+(st.hint?'<br>'+st.hint:'');
+}
+
+on('btn-enable-notif','click',function(){
+  if(!('Notification' in window)){ refreshNotifState(); return; }
+  Notification.requestPermission().then(function(){
+    refreshNotifState();
+    if(Notification.permission==='granted') notify('✅ الإشعارات تعمل','ستصلك تنبيهات الوصول والمغادرة هنا','test');
+  }).catch(function(){ refreshNotifState(); });
+});
+
+on('btn-diagnose','click',async function(){
+  var out=document.getElementById('diag-out');
+  out.innerHTML='<div style="color:#6b7280;">⏳ جاري الفحص...</div>';
+  var html='';
+
+  // 1) اتصال آمن
+  html+=diagLine(window.isSecureContext!==false && location.protocol!=='file:',
+    'الاتصال آمن (https)',
+    location.protocol==='file:'?'أنت تفتح ملفاً محلياً — افتح رابط الموقع بدلاً منه':'');
+
+  // 2) الإنترنت
+  html+=diagLine(navigator.onLine!==false,'متصل بالإنترنت','');
+
+  // 3) الصوت
+  var ctx=ensureCtx();
+  var audioOk = !!ctx && ctx.state!=='suspended';
+  html+=diagLine(audioOk?true:null,'صوت التنبيه',
+    audioOk?'':'اضغط أي مكان في الصفحة أو زر «اختبار الصوت» لتفعيله (المتصفح يمنع الصوت قبل أول لمسة)');
+
+  // 4) الإشعارات
+  var st=notifStateText();
+  html+=diagLine(st.ok,st.txt,st.hint);
+
+  // 5) القراءة من قاعدة البيانات
+  var canRead=false;
+  try{ await getDocs(collection(db,'visits')); canRead=true; }catch(e){}
+  html+=diagLine(canRead,'القراءة من قاعدة البيانات',
+    canRead?'':'قواعد أمان Firestore تمنع القراءة من مجموعة visits');
+
+  // 6) الكتابة + الحذف (اختبار حقيقي بسجل مؤقت)
+  var canWrite=false, canDelete=false, writeErr='', delErr='';
+  var testId=null;
+  try{
+    var ref=await addDoc(collection(db,'visits'),{__diagnostic:true,createdAt:new Date().toISOString(),status:'__diag__'});
+    testId=ref.id; canWrite=true;
+  }catch(e){ writeErr=(e&&e.code)||String(e&&e.message||''); }
+  html+=diagLine(canWrite,'الكتابة في قاعدة البيانات',
+    canWrite?'':'قواعد الأمان تمنع الكتابة'+(writeErr?' ('+writeErr+')':''));
+
+  if(testId){
+    try{ await deleteDoc(doc(db,'visits',testId)); canDelete=true; }
+    catch(e){ delErr=(e&&e.code)||String(e&&e.message||''); }
+    html+=diagLine(canDelete,'حذف البيانات تلقائياً',
+      canDelete?'':'قواعد أمان Firestore تمنع الحذف — لهذا لا تُمسح بيانات الضيف'+(delErr?' ('+delErr+')':''));
+  } else {
+    html+=diagLine(false,'حذف البيانات تلقائياً','لم يُختبر لأن الكتابة فشلت');
+  }
+
+  if(!canDelete||!canWrite){
+    html+='<div style="margin-top:12px;padding:11px;border-radius:10px;background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);font-size:11px;line-height:1.9;color:#b91c1c;font-weight:700;">'
+      +'الحل: افتح Firebase Console ← Firestore Database ← Rules، والصق:<br>'
+      +'<code style="display:block;direction:ltr;text-align:left;background:#fff;padding:8px;border-radius:6px;margin-top:6px;font-size:10px;color:#1f2937;white-space:pre;">'
+      +'match /visits/{id} {\n  allow read, write, delete: if true;\n}</code>'
+      +'ثم اضغط Publish.</div>';
+  }
+  out.innerHTML=html;
+});
+
+refreshNotifState();
 
 on('btn-refresh','click',loadData);
 
