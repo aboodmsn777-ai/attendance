@@ -315,6 +315,20 @@ function isInApp(){
   var ua=navigator.userAgent||'';
   return /FBAN|FBAV|Instagram|Line\//i.test(ua)||/Messenger/i.test(ua)||/WhatsApp/i.test(ua)||/TikTok/i.test(ua)||/; wv\)/i.test(ua);
 }
+/* الصفحة مفتوحة من ملف محلي أو معاينة أو اتصال غير آمن -> الموقع لن يعمل إطلاقاً */
+function isInsecure(){
+  if(location.protocol==='file:') return true;
+  if(window.isSecureContext===false) return true;
+  return false;
+}
+/* متصفح معاينة داخل تطبيق على iOS (بدون Safari) */
+function isIosPreview(){
+  var ua=navigator.userAgent||'';
+  var iOS=/iPad|iPhone|iPod/.test(ua);
+  if(!iOS) return false;
+  // Safari الحقيقي يحتوي على "Safari" في الـ UA؛ المعاينات غالباً لا تحتويه
+  return ua.indexOf('Safari')===-1;
+}
 function fbCopy(text,cb){
   try{
     var ta=document.createElement('textarea');
@@ -415,6 +429,7 @@ function setGpsHelp(kind){
     denied:'الإذن مرفوض. لتفعيله:<br>iPhone: الإعدادات ← Safari ← الموقع ← اسمح<br>Android: إعدادات الموقع في المتصفح ← اسمح لهذا الموقع',
     off:'تأكد أن خدمة الموقع (GPS) مفعّلة من إعدادات جوالك، وأنك متصل بالإنترنت.',
     timeout:'التحديد استغرق وقتاً طويلاً. تأكد من تفعيل GPS، ويمكنك استخدام زر "سجّل وصولي يدوياً".',
+    insecure:'تحديد الموقع يعمل فقط عند فتح رابط الخدمة من المتصفح (https). أنت الآن تفتح الصفحة كملف محلي أو داخل نافذة معاينة.',
     generic:'إذا استمرت المشكلة، افتح الرابط من Safari أو Chrome مباشرة (وليس من داخل واتساب).'
   };
   h.innerHTML=m[kind]||m.generic; h.classList.add('show');
@@ -448,9 +463,26 @@ function startGps(){
   document.getElementById('gps-txt').textContent='جاري التحديد...';
   clearGpsHelp(); gpsRetried=false;
 
-  if(isInApp()) document.getElementById('webview-warn').classList.add('show');
-  else document.getElementById('webview-warn').classList.remove('show');
+  var warnEl=document.getElementById('webview-warn');
+  var wt=warnEl.querySelector('.ww-title'), wx=warnEl.querySelector('.ww-text');
+  if(isInsecure()){
+    wt.textContent='⚠️ افتح الرابط من المتصفح';
+    wx.textContent='الصفحة مفتوحة كملف محلي وليست عبر الرابط، وهذا يمنع تحديد الموقع والتسجيل. افتح رابط الخدمة من Safari أو Chrome.';
+    warnEl.classList.add('show');
+  } else if(isInApp()||isIosPreview()){
+    wt.textContent='⚠️ لن يعمل تحديد الموقع هنا';
+    wx.textContent='أنت تفتح الرابط داخل نافذة معاينة/تطبيق، وهذا يمنع رصد وصولك تلقائياً. افتح الرابط من متصفح الجهاز مباشرة (Safari أو Chrome).';
+    warnEl.classList.add('show');
+  } else {
+    warnEl.classList.remove('show');
+  }
 
+  if(isInsecure()){
+    document.getElementById('gps-pip').className='pip bad';
+    document.getElementById('gps-txt').textContent='غير متاح هنا';
+    setGpsHelp('insecure');
+    return;
+  }
   if(!navigator.geolocation){
     document.getElementById('gps-pip').className='pip bad';
     document.getElementById('gps-txt').textContent='غير مدعوم';
@@ -532,7 +564,16 @@ document.getElementById('btn-register').addEventListener('click',async function(
     await refresh();
     await maybeAutoArrive();
   }catch(e){
-    alertBox('reg-alert','error','❌','حدث خطأ، حاول مرة أخرى');
+    var code=(e&&e.code)||'';
+    if(String(code).indexOf('permission-denied')>-1){
+      alertBox('reg-alert','error','❌','التسجيل مرفوض من قواعد أمان قاعدة البيانات — أبلغ الإدارة');
+    } else if(String(code).indexOf('unavailable')>-1||!navigator.onLine){
+      alertBox('reg-alert','error','❌','لا يوجد اتصال بالإنترنت — تحقق من الشبكة وحاول مجدداً');
+    } else if(isInsecure()){
+      alertBox('reg-alert','error','❌','افتح الرابط من المتصفح مباشرة (Safari/Chrome) وليس كملف محلي');
+    } else {
+      alertBox('reg-alert','error','❌','تعذّر التسجيل'+(code?' ('+code+')':'')+' — حاول مرة أخرى');
+    }
   }
   btn.disabled=false; btn.textContent='تسجيل بياناتي';
 });

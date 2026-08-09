@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#b8960c">
 <title>Valet Parking — موظف الاستقبال</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -128,6 +130,27 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
 .alert-bar.error{background:rgba(220,38,38,.08);color:#b91c1c;}
 .hint{font-size:11px;color:var(--gray2);line-height:1.8;margin-top:8px;}
 
+/* Map picker */
+.map-mask{position:fixed;inset:0;z-index:900;background:rgba(17,24,39,.75);display:none;align-items:center;justify-content:center;padding:12px;}
+.map-mask.open{display:flex;}
+.map-box{width:100%;max-width:560px;height:88vh;max-height:720px;background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+.map-head{padding:12px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
+.map-head h3{font-size:14px;font-weight:800;color:var(--gold);}
+.map-close{width:32px;height:32px;border:none;border-radius:50%;background:#f3f4f6;color:var(--ink);font-size:17px;font-weight:800;cursor:pointer;flex-shrink:0;}
+#map-canvas{flex:1;width:100%;min-height:200px;background:#e5e7eb;}
+.map-foot{padding:12px 15px;border-top:1px solid var(--border);flex-shrink:0;background:#fff;}
+.map-coords{font-size:12px;font-weight:800;color:var(--ink);direction:ltr;text-align:center;margin-bottom:9px;}
+.map-radius-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.map-radius-row label{font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.map-radius-row input[type=range]{flex:1;accent-color:var(--gold);}
+.map-radius-val{font-size:12.5px;font-weight:800;color:var(--gold);min-width:64px;text-align:left;direction:ltr;}
+.map-btns{display:flex;gap:8px;}
+.map-btns button{flex:1;padding:12px;border:none;border-radius:11px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;}
+.map-btn-locate{background:#f3f4f6;color:var(--ink);}
+.map-btn-confirm{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#fff;}
+.map-hint{font-size:10.5px;color:var(--gray2);text-align:center;margin-top:7px;line-height:1.6;}
+.map-unavailable{padding:24px;text-align:center;font-size:12.5px;color:var(--muted);line-height:1.8;}
+
 .audio-hint{display:none;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:500;background:var(--dark);color:var(--gold3);padding:12px 22px;border-radius:30px;font-size:13px;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.32);cursor:pointer;text-align:center;max-width:92vw;}
 .audio-hint.show{display:block;animation:fadeUpHint .4s ease;}
 @keyframes fadeUpHint{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
@@ -217,6 +240,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
   <div class="tab-content" id="tab-settings">
     <div class="panel">
       <h3>📍 نطاق الموقع</h3>
+      <button class="btn-primary" id="btn-open-map" style="width:100%;margin-bottom:9px;">🗺️ اختر الموقع على الخريطة</button>
       <button class="btn-primary" id="btn-use-my-location" style="width:100%;margin-bottom:12px;">📍 استخدم موقعي الحالي</button>
       <div class="field">
         <label>أو الصق رابط/إحداثيات من خرائط جوجل</label>
@@ -242,6 +266,29 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
     </div>
   </div>
 
+</div>
+
+<div class="map-mask" id="map-mask">
+  <div class="map-box">
+    <div class="map-head">
+      <h3>🗺️ حرّك الدبوس على موقع الفاليت</h3>
+      <button class="map-close" id="map-close">✕</button>
+    </div>
+    <div id="map-canvas"></div>
+    <div class="map-foot">
+      <div class="map-coords" id="map-coords">—</div>
+      <div class="map-radius-row">
+        <label>نصف القطر</label>
+        <input type="range" id="map-radius" min="25" max="1000" step="25" value="100">
+        <span class="map-radius-val" id="map-radius-val">100 م</span>
+      </div>
+      <div class="map-btns">
+        <button class="map-btn-locate" id="map-locate">📍 موقعي</button>
+        <button class="map-btn-confirm" id="map-confirm">✓ تأكيد هذا الموقع</button>
+      </div>
+      <div class="map-hint">اسحب الخريطة أو اضغط عليها لتحريك الدبوس — الدائرة توضح نطاق رصد الوصول</div>
+    </div>
+  </div>
 </div>
 
 <div class="audio-hint" id="audio-hint">🔊 اضغط هنا لتفعيل صوت التنبيهات</div>
@@ -676,6 +723,94 @@ on('btn-use-my-location','click',function(){
     locMsg('error',m[err&&err.code]||'تعذّر تحديد الموقع');
     done();
   },{enableHighAccuracy:true,timeout:12000,maximumAge:0});
+});
+
+/* ═══════ اختيار الموقع من الخريطة (OpenStreetMap — مجاني ودائم بلا مفتاح) ═══════ */
+var __map=null, __marker=null, __circle=null, __mapPos=null;
+
+function currentFormCoords(){
+  var la=parseSingle(document.getElementById('set-lat').value);
+  var ln=parseSingle(document.getElementById('set-lng').value);
+  if(isNaN(la)||isNaN(ln)||la<-90||la>90||ln<-180||ln>180) return {lat:24.783556,lng:46.724472};
+  return {lat:la,lng:ln};
+}
+
+function updateMapUI(){
+  if(!__mapPos) return;
+  document.getElementById('map-coords').textContent=__mapPos.lat.toFixed(6)+', '+__mapPos.lng.toFixed(6);
+  if(__marker) __marker.setLatLng(__mapPos);
+  if(__circle) __circle.setLatLng(__mapPos);
+}
+
+function setMapRadius(r){
+  document.getElementById('map-radius-val').textContent=r+' م';
+  if(__circle) __circle.setRadius(r);
+}
+
+on('btn-open-map','click',function(){
+  var mask=document.getElementById('map-mask');
+  mask.classList.add('open');
+
+  if(typeof L==='undefined'){
+    document.getElementById('map-canvas').innerHTML=
+      '<div class="map-unavailable">تعذّر تحميل الخريطة — تأكد من اتصالك بالإنترنت.<br>يمكنك إدخال الإحداثيات يدوياً أو استخدام زر "استخدم موقعي الحالي".</div>';
+    return;
+  }
+
+  var start=currentFormCoords();
+  var r=parseSingle(document.getElementById('set-radius').value);
+  if(isNaN(r)||r<=0) r=100;
+  if(r>1000) r=1000;
+  document.getElementById('map-radius').value=r;
+  __mapPos={lat:start.lat,lng:start.lng};
+
+  if(!__map){
+    __map=L.map('map-canvas',{zoomControl:true}).setView([start.lat,start.lng],16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      maxZoom:19, attribution:'© OpenStreetMap'
+    }).addTo(__map);
+
+    __circle=L.circle([start.lat,start.lng],{radius:r,color:'#b8960c',fillColor:'#b8960c',fillOpacity:.14,weight:2}).addTo(__map);
+    __marker=L.marker([start.lat,start.lng],{draggable:true}).addTo(__map);
+
+    __marker.on('drag',function(e){ __mapPos=e.target.getLatLng(); updateMapUI(); });
+    __marker.on('dragend',function(e){ __mapPos=e.target.getLatLng(); updateMapUI(); });
+    __map.on('click',function(e){ __mapPos=e.latlng; updateMapUI(); });
+  } else {
+    __map.setView([start.lat,start.lng],16);
+  }
+  setMapRadius(r);
+  updateMapUI();
+  setTimeout(function(){ try{ __map.invalidateSize(); }catch(e){} },220);
+});
+
+on('map-radius','input',function(){ setMapRadius(parseInt(this.value,10)||100); });
+
+on('map-close','click',function(){ document.getElementById('map-mask').classList.remove('open'); });
+on('map-mask','click',function(e){ if(e.target===this) this.classList.remove('open'); });
+
+on('map-locate','click',function(){
+  var btn=this;
+  if(!navigator.geolocation){ btn.textContent='الموقع غير مدعوم'; return; }
+  btn.disabled=true; btn.textContent='⏳ جاري...';
+  navigator.geolocation.getCurrentPosition(function(p){
+    __mapPos={lat:p.coords.latitude,lng:p.coords.longitude};
+    if(__map) __map.setView([__mapPos.lat,__mapPos.lng],17);
+    updateMapUI();
+    btn.disabled=false; btn.textContent='📍 موقعي';
+  },function(){
+    btn.disabled=false; btn.textContent='📍 تعذّر — حرّك الدبوس';
+    setTimeout(function(){ btn.textContent='📍 موقعي'; },3000);
+  },{enableHighAccuracy:true,timeout:12000,maximumAge:0});
+});
+
+on('map-confirm','click',function(){
+  if(!__mapPos){ document.getElementById('map-mask').classList.remove('open'); return; }
+  document.getElementById('set-lat').value=Number(__mapPos.lat).toFixed(6);
+  document.getElementById('set-lng').value=Number(__mapPos.lng).toFixed(6);
+  document.getElementById('set-radius').value=parseInt(document.getElementById('map-radius').value,10)||100;
+  document.getElementById('map-mask').classList.remove('open');
+  locMsg('success','تم اختيار الموقع من الخريطة — اضغط حفظ لتثبيته');
 });
 
 on('btn-save-location','click',async function(){
