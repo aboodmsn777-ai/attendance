@@ -299,16 +299,28 @@ function stopRing(){ if(__ringTimer){ clearInterval(__ringTimer); __ringTimer=nu
 function chime(){ playTone([[660,0,.22],[880,.2,.3]]); vibrate(180); }
 
 var ICON='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%23b8960c%22/%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2216%22 fill=%22none%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2250%22 y1=%228%22 x2=%2250%22 y2=%2232%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2215%22 y1=%2272%22 x2=%2240%22 y2=%2258%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2285%22 y1=%2272%22 x2=%2260%22 y2=%2258%22 stroke=%22white%22 stroke-width=%226%22/%3E%3C/svg%3E';
-function notify(title,body){
+function notify(title,body,tag){
   if(!('Notification' in window)) return;
   if(Notification.permission==='granted'){
     try{
-      var n=new Notification(title,{body:body,icon:ICON,requireInteraction:true});
+      var opts={body:body,icon:ICON,requireInteraction:true};
+      if(tag){ opts.tag=tag; opts.renotify=true; }
+      var n=new Notification(title,opts);
       n.onclick=function(){ try{window.focus();}catch(e){} try{n.close();}catch(e){} };
     }catch(e){}
   } else if(Notification.permission==='default'){
     try{ Notification.requestPermission(); }catch(e){}
   }
+}
+
+var __titleTimer=null, __origTitle=document.title;
+function startTitleFlash(msg){
+  if(__titleTimer) return;
+  var on=false;
+  __titleTimer=setInterval(function(){ document.title = on ? __origTitle : msg; on=!on; },900);
+}
+function stopTitleFlash(){
+  if(__titleTimer){ clearInterval(__titleTimer); __titleTimer=null; document.title=__origTitle; }
 }
 
 function isInApp(){
@@ -692,40 +704,51 @@ function render(){
   document.getElementById('head-sub').textContent=sub[visit.status]||'';
 }
 
+var __readyNotifyAt=0;
+function showReadyAlert(){
+  document.getElementById('ready-plate').textContent=visit.plate||'—';
+  document.getElementById('ready-modal').classList.add('open');
+  document.getElementById('btn-guest-ack').disabled=false;
+  startRing();
+  startTitleFlash('🚗 سيارتك جاهزة!');
+  // إعادة الإشعار كل 20 ثانية حتى يضغط الضيف "تم"
+  var now=Date.now();
+  if(now-__readyNotifyAt>=20000){
+    __readyNotifyAt=now;
+    notify('🚗 سيارتك جاهزة!','سيارتك '+visit.plate+' بانتظارك عند نقطة الاستلام','ready-'+visit.id);
+  }
+}
+
 function reactToStatus(){
   if(!visit) return;
   var s=visit.status;
   if(s===lastSeenStatus){
-    if(s===S.READY) startRing();
+    if(s===S.READY) showReadyAlert();   // التنبيه يستمر ولا يتوقف حتى التأكيد
     return;
   }
   lastSeenStatus=s;
   localStorage.setItem('__seen_status__',s);
 
   if(s===S.PARKED){
-    stopRing(); chime();
+    stopRing(); stopTitleFlash(); chime();
     notify('✅ تم استلام سيارتك','سيارتك '+visit.plate+' في عهدة الفاليت');
     alertBox('visit-alert','success','✅','استلم الموظف سيارتك — في أمان');
   } else if(s===S.BRINGING){
-    stopRing(); chime();
+    stopRing(); stopTitleFlash(); chime();
     notify('🚗 جاري إحضار سيارتك','الموظف في طريقه لإحضار سيارتك '+visit.plate);
     alertBox('visit-alert','info','🚗','جاري إحضار سيارتك — يرجى الانتظار قليلاً');
   } else if(s===S.READY){
-    document.getElementById('ready-plate').textContent=visit.plate||'—';
-    document.getElementById('ready-modal').classList.add('open');
-    document.getElementById('btn-guest-ack').disabled=false;
-    startRing();
-    notify('🚗 سيارتك جاهزة!','سيارتك '+visit.plate+' بانتظارك عند نقطة الاستلام');
+    showReadyAlert();
   } else if(s===S.GUEST_ACK){
-    stopRing();
+    stopRing(); stopTitleFlash();
     document.getElementById('ready-modal').classList.remove('open');
   } else if(s===S.COMPLETED){
-    stopRing(); chime();
+    stopRing(); stopTitleFlash(); chime();
     document.getElementById('ready-modal').classList.remove('open');
     notify('🎉 رحلة موفقة','تم تسليم سيارتك بنجاح — نتشرف بخدمتكم دائماً');
     alertBox('visit-alert','success','🎉','تم تسليم سيارتك — نتشرف بخدمتكم دائماً');
   } else {
-    stopRing();
+    stopRing(); stopTitleFlash();
   }
 }
 
@@ -734,14 +757,31 @@ async function refresh(){
   try{
     var d=await getDoc(doc(db,'visits',visitId));
     if(!d.exists()){
+      // حُذفت بيانات الضيف بعد إتمام الخدمة
+      var wasFinished = (lastSeenStatus===S.COMPLETED||lastSeenStatus===S.GUEST_ACK||lastSeenStatus===S.READY);
+      stopRing(); stopTitleFlash();
+      document.getElementById('ready-modal').classList.remove('open');
       localStorage.removeItem('__visit__');
-      visitId=null; visit=null; render(); return;
+      localStorage.removeItem('__seen_status__');
+      visitId=null; visit=null; lastSeenStatus=null; autoArriveSent=false;
+      render();
+      if(wasFinished){
+        alertBox('reg-alert','success','🎉','تم إتمام الخدمة وحُذفت بياناتك — نتشرف بخدمتكم دائماً');
+      }
+      return;
     }
     visit=Object.assign({id:d.id},d.data());
     render();
     reactToStatus();
   }catch(e){}
 }
+
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){
+    if(visit&&visit.status===S.READY){ stopRing(); startRing(); }
+    refresh();
+  }
+});
 
 async function init(){
   if('Notification' in window && Notification.permission==='default'){
@@ -750,7 +790,7 @@ async function init(){
   await loadZone();
   await refresh();
   startGps();
-  setInterval(refresh,5000);
+  setInterval(refresh,2000); // أسرع من مهلة الحذف (5 ثوانٍ) لضمان رؤية الضيف لتأكيد التسليم
 }
 init();
 

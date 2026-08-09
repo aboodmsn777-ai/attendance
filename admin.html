@@ -346,16 +346,32 @@ function stopRing(){ if(__ringTimer){ clearInterval(__ringTimer); __ringTimer=nu
 function chime(){ playTone([[660,0,.22],[880,.2,.3]]); vibrate(180); }
 
 var ICON='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%23b8960c%22/%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2216%22 fill=%22none%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2250%22 y1=%228%22 x2=%2250%22 y2=%2232%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2215%22 y1=%2272%22 x2=%2240%22 y2=%2258%22 stroke=%22white%22 stroke-width=%226%22/%3E%3Cline x1=%2285%22 y1=%2272%22 x2=%2260%22 y2=%2258%22 stroke=%22white%22 stroke-width=%226%22/%3E%3C/svg%3E';
-function notify(title,body){
+function notify(title,body,tag){
   if(!('Notification' in window)) return;
   if(Notification.permission==='granted'){
     try{
-      var n=new Notification(title,{body:body,icon:ICON,requireInteraction:true});
+      var opts={body:body,icon:ICON,requireInteraction:true};
+      if(tag){ opts.tag=tag; opts.renotify=true; }
+      var n=new Notification(title,opts);
       n.onclick=function(){ try{window.focus();}catch(e){} try{n.close();}catch(e){} };
     }catch(e){}
   } else if(Notification.permission==='default'){
     try{ Notification.requestPermission(); }catch(e){}
   }
+}
+
+/* وميض عنوان التبويب — ينبّه الموظف حتى لو الصفحة في الخلفية */
+var __titleTimer=null, __origTitle=document.title;
+function startTitleFlash(msg){
+  if(__titleTimer) return;
+  var on=false;
+  __titleTimer=setInterval(function(){
+    document.title = on ? __origTitle : msg;
+    on=!on;
+  },900);
+}
+function stopTitleFlash(){
+  if(__titleTimer){ clearInterval(__titleTimer); __titleTimer=null; document.title=__origTitle; }
 }
 
 function on(id,evt,fn){ var el=document.getElementById(id); if(el) el.addEventListener(evt,fn); }
@@ -443,7 +459,47 @@ async function setStatus(id,status,timeField){
 window.vAckArrival = function(id){ stopRing(); setStatus(id,S.PARKED,'parkedAt'); };
 window.vAckDeparture = function(id){ stopRing(); setStatus(id,S.BRINGING,'bringingAt'); };
 window.vCarReady = function(id){ setStatus(id,S.READY,'readyAt'); };
-window.vComplete = function(id){ setStatus(id,S.COMPLETED,'completedAt'); };
+window.vComplete = async function(id){
+  await setStatus(id,S.COMPLETED,'completedAt');
+  scheduleWipe(id);
+};
+
+/* ═══════ حذف بيانات الضيف بعد 5 ثوانٍ من تأكيد التسليم ═══════ */
+var PURGE_DELAY_MS=5000;
+var __wipeTimers={};
+
+function scheduleWipe(id){
+  if(__wipeTimers[id]) return;
+  __wipeTimers[id]=setTimeout(async function(){
+    delete __wipeTimers[id];
+    try{
+      await deleteDoc(doc(db,'visits',id));
+      await loadData();
+    }catch(e){ console.error('wipe',e); }
+  },PURGE_DELAY_MS);
+}
+
+/* شبكة أمان: لو أُغلقت الصفحة قبل تنفيذ الحذف، تُحذف عند أي تحميل لاحق */
+function purgeOldCompleted(){
+  var now=Date.now();
+  visits.filter(function(v){ return v.status===S.COMPLETED; }).forEach(function(v){
+    var t=0;
+    try{ t=new Date(v.completedAt).getTime(); }catch(e){}
+    if(!t){ scheduleWipe(v.id); return; }
+    var age=now-t;
+    if(age>=PURGE_DELAY_MS){
+      if(!__wipeTimers[v.id]){
+        __wipeTimers[v.id]=setTimeout(function(){},0); // منع التكرار
+        deleteDoc(doc(db,'visits',v.id)).then(function(){
+          delete __wipeTimers[v.id];
+          loadData();
+        }).catch(function(){ delete __wipeTimers[v.id]; });
+      }
+    } else {
+      setTimeout(function(){ scheduleWipe(v.id); }, PURGE_DELAY_MS-age);
+    }
+  });
+}
 
 /* ═══════ التحميل ═══════ */
 async function loadData(){
@@ -461,6 +517,7 @@ async function loadData(){
   [updateStats,renderActive,renderHistory,updateBadges]
     .forEach(function(fn){ try{ fn(); }catch(e){ console.error(fn.name,e); } });
   checkAlerts();
+  try{ purgeOldCompleted(); }catch(e){ console.error('purge',e); }
 }
 
 function byStatus(s){ return visits.filter(function(v){ return v.status===s; }); }
@@ -559,7 +616,7 @@ function renderHistory(){
   var list=byStatus(S.COMPLETED);
   var el=document.getElementById('history-list');
   if(!list.length){
-    el.innerHTML='<div class="empty"><span class="empty-ico">📋</span><p>لا يوجد سجل مكتمل بعد</p></div>';
+    el.innerHTML='<div class="empty"><span class="empty-ico">🔒</span><p>لا توجد بيانات محفوظة</p><p style="font-size:11px;margin-top:6px;color:var(--gray2);font-weight:600;">تُحذف بيانات الضيف تلقائياً بعد 5 ثوانٍ من تأكيد التسليم</p></div>';
     return;
   }
   el.innerHTML=list.map(function(v){
@@ -577,23 +634,27 @@ function renderHistory(){
 }
 
 /* ═══════ التنبيهات ═══════ */
+/* إعادة إرسال الإشعار كل 20 ثانية طالما الطلب لم يُعالَج */
+var __notifyRepeatAt={};
+function notifyPersistent(v,kind){
+  var now=Date.now();
+  var last=__notifyRepeatAt[v.id]||0;
+  if(now-last < 20000) return;
+  __notifyRepeatAt[v.id]=now;
+  if(kind==='departure'){
+    notify('🔔 طلب مغادرة — '+(v.plate||''),'الجوال: '+(v.phone||'—')+' — الضيف ينتظر سيارته','dep-'+v.id);
+  } else {
+    notify('🚙 وصول ضيف — '+(v.plate||''),'الجوال: '+(v.phone||'—')+' — بانتظار استلام السيارة','arr-'+v.id);
+  }
+}
+
 function checkAlerts(){
   var departures=byStatus(S.DEP_REQ);
   var arrivals=byStatus(S.ARRIVED);
 
-  // إشعار نظام التشغيل مرة واحدة لكل طلب
-  departures.forEach(function(v){
-    if(!seenDepartures[v.id]){
-      seenDepartures[v.id]=true;
-      notify('🔔 طلب مغادرة — '+(v.plate||''),'الجوال: '+(v.phone||'—')+' — الضيف ينتظر سيارته');
-    }
-  });
-  arrivals.forEach(function(v){
-    if(!seenArrivals[v.id]){
-      seenArrivals[v.id]=true;
-      notify('🚙 وصول ضيف — '+(v.plate||''),'الجوال: '+(v.phone||'—')+' — بانتظار استلام السيارة');
-    }
-  });
+  // الإشعار يتكرر باستمرار حتى يضغط الموظف
+  departures.forEach(function(v){ seenDepartures[v.id]=true; notifyPersistent(v,'departure'); });
+  arrivals.forEach(function(v){ seenArrivals[v.id]=true; notifyPersistent(v,'arrival'); });
 
   var depBanner=document.getElementById('banner-departure');
   var arrBanner=document.getElementById('banner-arrival');
@@ -626,10 +687,25 @@ function checkAlerts(){
     arrBanner.classList.remove('show');
   }
 
-  // الرنين المتواصل لأي طلب معلّق (مغادرة أو وصول)
-  if(departures.length||arrivals.length) startRing();
-  else stopRing();
+  // الرنين المتواصل لأي طلب معلّق (مغادرة أو وصول) — لا يتوقف إلا بضغط الموظف
+  if(departures.length||arrivals.length){
+    startRing();
+    startTitleFlash(departures.length ? '🔔 طلب مغادرة!' : '🚙 وصول ضيف!');
+  } else {
+    stopRing();
+    stopTitleFlash();
+  }
 }
+
+/* عند العودة للصفحة: أعد تشغيل الرنين فوراً إن بقي طلب معلّق (المتصفح يخنق المؤقتات في الخلفية) */
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){
+    if(byStatus(S.DEP_REQ).length||byStatus(S.ARRIVED).length){
+      stopRing(); startRing();
+    }
+    loadData();
+  }
+});
 
 document.getElementById('btn-ack-departure').addEventListener('click',function(){
   var id=this.getAttribute('data-id'); if(id) window.vAckDeparture(id);
