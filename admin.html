@@ -217,10 +217,15 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
   <div class="tab-content" id="tab-settings">
     <div class="panel">
       <h3>📍 نطاق الموقع</h3>
-      <div class="field"><label>خط العرض (Latitude)</label><input type="text" id="set-lat" placeholder="24.783556"></div>
-      <div class="field"><label>خط الطول (Longitude)</label><input type="text" id="set-lng" placeholder="46.724472"></div>
-      <div class="field"><label>نصف القطر (متر)</label><input type="number" id="set-radius" placeholder="100"></div>
-      <button class="btn-primary" id="btn-save-location">حفظ الموقع</button>
+      <button class="btn-primary" id="btn-use-my-location" style="width:100%;margin-bottom:12px;">📍 استخدم موقعي الحالي</button>
+      <div class="field">
+        <label>أو الصق رابط/إحداثيات من خرائط جوجل</label>
+        <input type="text" id="set-paste" placeholder="24.783556, 46.724472">
+      </div>
+      <div class="field"><label>خط العرض (Latitude)</label><input type="text" id="set-lat" inputmode="decimal" placeholder="24.783556"></div>
+      <div class="field"><label>خط الطول (Longitude)</label><input type="text" id="set-lng" inputmode="decimal" placeholder="46.724472"></div>
+      <div class="field"><label>نصف القطر (متر)</label><input type="text" id="set-radius" inputmode="numeric" placeholder="100"></div>
+      <button class="btn-primary" id="btn-save-location" style="width:100%;">حفظ الموقع</button>
       <div class="alert-bar" id="loc-alert"></div>
       <div class="hint" id="loc-current">—</div>
       <div class="hint">وصول الضيف يُرصد تلقائياً بمجرد دخوله هذا النطاق.</div>
@@ -602,20 +607,122 @@ async function loadLocationSettings(){
   }catch(e){}
 }
 
-on('btn-save-location','click',async function(){
-  var lat=parseFloat(document.getElementById('set-lat').value);
-  var lng=parseFloat(document.getElementById('set-lng').value);
-  var radius=parseInt(document.getElementById('set-radius').value)||100;
+/* تحويل الأرقام العربية والفارسية إلى إنجليزية + تنظيف الرمز */
+function normalizeNum(str){
+  if(str==null) return '';
+  var out=String(str);
+  var ar='\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669';
+  var fa='\u06F0\u06F1\u06F2\u06F3\u06F4\u06F5\u06F6\u06F7\u06F8\u06F9';
+  out=out.replace(/[\u0660-\u0669]/g,function(c){ return String(ar.indexOf(c)); });
+  out=out.replace(/[\u06F0-\u06F9]/g,function(c){ return String(fa.indexOf(c)); });
+  out=out.replace(/\u066B/g,'.');            // الفاصلة العشرية العربية
+  out=out.replace(/[\u200E\u200F\u202A-\u202E]/g,''); // محارف الاتجاه المخفية
+  return out.trim();
+}
+
+/* يقبل: "24.78, 46.72" أو رابط خرائط جوجل أو رقم واحد */
+function parseCoordPair(raw){
+  var t=normalizeNum(raw);
+  if(!t) return null;
+  var m=t.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);        // .../@24.78,46.72,17z
+  if(!m) m=t.match(/[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/); // ...?q=24.78,46.72
+  if(!m) m=t.match(/(-?\d+(?:\.\d+)?)\s*[,\u060C;\s]\s*(-?\d+(?:\.\d+)?)/);
+  if(!m) return null;
+  var a=parseFloat(m[1]), b=parseFloat(m[2]);
+  if(isNaN(a)||isNaN(b)) return null;
+  return {lat:a,lng:b};
+}
+
+/* رقم مفرد: يرفض الفاصلة كعلامة عشرية بدل النقطة بصمت */
+function parseSingle(raw){
+  var t=normalizeNum(raw);
+  if(!t) return NaN;
+  if(t.indexOf(',')>-1 && t.indexOf('.')===-1) t=t.replace(',','.'); // 24,78 -> 24.78
+  var m=t.match(/-?\d+(?:\.\d+)?/);
+  return m ? parseFloat(m[0]) : NaN;
+}
+
+function locMsg(type,text){
   var el=document.getElementById('loc-alert');
-  if(isNaN(lat)||isNaN(lng)){ el.textContent='أدخل إحداثيات صحيحة'; el.className='alert-bar error show'; return; }
-  try{
-    await setDoc(doc(db,'settings','location'),{lat:lat,lng:lng,radius:radius,updatedAt:new Date().toISOString()});
-    el.textContent='تم حفظ الموقع بنجاح ✅'; el.className='alert-bar success show';
-    document.getElementById('loc-current').textContent='الحالي: '+lat+', '+lng+' — نصف القطر: '+radius+' متر';
-    setTimeout(function(){ el.classList.remove('show'); },4000);
-  }catch(e){
-    el.textContent='تعذّر الحفظ، حاول مرة أخرى'; el.className='alert-bar error show';
+  el.textContent=text;
+  el.className='alert-bar '+type+' show';
+  if(type==='success') setTimeout(function(){ el.classList.remove('show'); },5000);
+}
+
+/* لصق زوج إحداثيات أو رابط -> يملأ الحقلين تلقائياً */
+on('set-paste','input',function(){
+  var pair=parseCoordPair(this.value);
+  if(pair){
+    document.getElementById('set-lat').value=pair.lat;
+    document.getElementById('set-lng').value=pair.lng;
+    locMsg('success','تم استخراج الإحداثيات — اضغط حفظ');
   }
+});
+
+/* استخدام موقع الموظف الحالي */
+on('btn-use-my-location','click',function(){
+  var btn=this;
+  if(!navigator.geolocation){ locMsg('error','المتصفح لا يدعم تحديد الموقع'); return; }
+  btn.disabled=true; btn.textContent='⏳ جاري تحديد موقعك...';
+  function done(){ btn.disabled=false; btn.textContent='📍 استخدم موقعي الحالي'; }
+  navigator.geolocation.getCurrentPosition(function(p){
+    document.getElementById('set-lat').value=p.coords.latitude.toFixed(6);
+    document.getElementById('set-lng').value=p.coords.longitude.toFixed(6);
+    if(!document.getElementById('set-radius').value) document.getElementById('set-radius').value=100;
+    locMsg('success','تم جلب موقعك — اضغط حفظ لتثبيته');
+    done();
+  },function(err){
+    var m={1:'الإذن مرفوض — فعّل الموقع لهذا المتصفح',2:'تعذّر تحديد الموقع — تأكد من تفعيل GPS',3:'انتهت المهلة — حاول مرة أخرى'};
+    locMsg('error',m[err&&err.code]||'تعذّر تحديد الموقع');
+    done();
+  },{enableHighAccuracy:true,timeout:12000,maximumAge:0});
+});
+
+on('btn-save-location','click',async function(){
+  var btn=this;
+  var latRaw=document.getElementById('set-lat').value;
+  var lngRaw=document.getElementById('set-lng').value;
+
+  // لو لصق الزوج كاملاً في خانة واحدة
+  var pair=parseCoordPair(latRaw);
+  var lat,lng;
+  if(pair && !normalizeNum(lngRaw)){ lat=pair.lat; lng=pair.lng; }
+  else { lat=parseSingle(latRaw); lng=parseSingle(lngRaw); }
+
+  var radius=parseSingle(document.getElementById('set-radius').value);
+  if(isNaN(radius)||radius<=0) radius=100;
+
+  if(isNaN(lat)||isNaN(lng)){ locMsg('error','أدخل إحداثيات صحيحة (مثال: 24.783556 و 46.724472)'); return; }
+  if(lat<-90||lat>90){ locMsg('error','خط العرض يجب أن يكون بين -90 و 90 — تأكد أنك لم تعكس الحقلين'); return; }
+  if(lng<-180||lng>180){ locMsg('error','خط الطول يجب أن يكون بين -180 و 180 — تأكد أنك لم تعكس الحقلين'); return; }
+
+  btn.disabled=true; var oldTxt=btn.textContent; btn.textContent='⏳ جاري الحفظ...';
+  try{
+    await setDoc(doc(db,'settings','location'),{
+      lat:lat, lng:lng, radius:radius, updatedAt:new Date().toISOString()
+    });
+    // تحقق فعلي: نقرأ ما حُفظ للتأكد أنه وصل لقاعدة البيانات
+    var back=await getDoc(doc(db,'settings','location'));
+    if(!back.exists() || Number(back.data().lat)!==lat || Number(back.data().lng)!==lng){
+      locMsg('error','لم يتم تأكيد الحفظ في قاعدة البيانات — حاول مرة أخرى');
+    } else {
+      document.getElementById('set-lat').value=lat;
+      document.getElementById('set-lng').value=lng;
+      document.getElementById('set-radius').value=radius;
+      document.getElementById('loc-current').textContent='الحالي: '+lat+', '+lng+' — نصف القطر: '+radius+' متر';
+      locMsg('success','تم حفظ الموقع بنجاح ✅');
+    }
+  }catch(e){
+    var code=(e&&e.code)||'';
+    if(String(code).indexOf('permission-denied')>-1){
+      locMsg('error','الحفظ مرفوض من قواعد أمان Firestore — اسمح بالكتابة على settings/location');
+    } else if(String(code).indexOf('unavailable')>-1){
+      locMsg('error','لا يوجد اتصال بالإنترنت — تحقق من الشبكة وحاول مجدداً');
+    } else {
+      locMsg('error','تعذّر الحفظ'+(code?' ('+code+')':'')+' — حاول مرة أخرى');
+    }
+  }
+  btn.disabled=false; btn.textContent=oldTxt;
 });
 
 on('btn-clear-completed','click',async function(){

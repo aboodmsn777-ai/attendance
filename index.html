@@ -400,8 +400,11 @@ function distM(la1,lo1,la2,lo2){
 async function loadZone(){
   try{
     var d=await getDoc(doc(db,'settings','location'));
-    if(d.exists()&&d.data().lat){
-      ZONE_LAT=d.data().lat; ZONE_LNG=d.data().lng; ZONE_RADIUS_M=d.data().radius||100;
+    if(d.exists()){
+      var v=d.data();
+      var la=Number(v.lat), ln=Number(v.lng), rd=Number(v.radius);
+      if(!isNaN(la)&&!isNaN(ln)){ ZONE_LAT=la; ZONE_LNG=ln; }
+      if(!isNaN(rd)&&rd>0) ZONE_RADIUS_M=rd;
     }
   }catch(e){}
 }
